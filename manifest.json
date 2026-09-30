@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BC helperis",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Ērts palīgs AM Furnitūra komandai: ātra preču un daudzumu atlase no eamf.lv ievietošanai Business Central.",
   "permissions": [
     "storage",

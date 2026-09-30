@@ -538,12 +538,32 @@
   border-top: 1px solid #f1f5f9 !important;
 }
 
+.bc-bridge-item-price-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 1 1 auto !important;
+  flex-wrap: wrap !important;
+}
+
 .bc-bridge-item-price {
   font-size: 13px !important;
   font-weight: 700 !important;
   color: #0f172a !important;
-  flex: 1 1 auto !important;
   white-space: nowrap !important;
+}
+
+.bc-bridge-item-step-badge {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: #0369a1 !important;
+  background: #e0f2fe !important;
+  border: 1px solid #bae6fd !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  line-height: 1.4 !important;
 }
 
 /* Quantity Spinner - Protected against Magento CSS stretching */

@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function render() {
     const totalCount = buffer.reduce((acc, curr) => acc + (parseFloat(curr.qty) || 1), 0);
     const displayTotal = Math.round(totalCount * 100) / 100;
-    statText.innerText = `${buffer.length} artikuli (${displayTotal} gab.)`;
+    statText.innerText = `${buffer.length} artikuli (${displayTotal} vienības)`;
 
     if (buffer.length === 0) {
       itemList.innerHTML = '<div class="empty-state">Buferī nav preču.<br>Pievienojiet tās vietnē eamf.lv!</div>';
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       pill.className = "item-pill";
       pill.innerHTML = `
         <span class="item-code">${escapeHtml(item.code)}</span>
-        <span class="item-qty">${item.qty} gab.</span>
+        <span class="item-qty">${item.qty} ${item.unit || "gab."}</span>
       `;
       itemList.appendChild(pill);
     });

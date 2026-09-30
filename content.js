@@ -11,7 +11,7 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.1.0";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.2";
 
   let state = {
     buffer: [],
@@ -155,6 +155,93 @@
     scanSearchAutocomplete();
   }
 
+  // --------------------------------------------------------------------------
+  // Step & Quantity Detection Rules (AM Furnitūra Catalog Standards)
+  // --------------------------------------------------------------------------
+  function getProductQuantityAndStep(code, name, container = null, isPDP = false) {
+    let step = 1;
+    let unit = "gab.";
+
+    const cleanCode = (code || "").trim();
+    const cleanName = (name || "").trim();
+
+    // 1. Detect step & unit from Code / Name rules (AM Furnitūra catalog standards)
+    // ABS 23mm edges: e.g. 74.F187.08.23, 74.F187.2.23, 74P.32339.08.23, 74.W1000.PM.1.23, 94.M032.HG.1.23
+    // Standard 23mm edging coils in AMF are sold in increments of 5 meters!
+    const isAbs23mm =
+      /(?:\.08\.23|\.0,8\.23|\.0\.8\.23|\.2\.23|\.1\.23|\.1\.5\.23|\.1,5\.23)$/i.test(cleanCode) ||
+      /(?:74|74P|94)\..*?\.(?:08|0\.8|0,8|1|1\.5|1,5|2)\.23$/i.test(cleanCode) ||
+      (cleanCode.endsWith(".23") && /^(?:74|74P|94)\./i.test(cleanCode)) ||
+      (/\bABS\b/i.test(cleanName) && /(?:0[,\.]8|1|1[,\.]5|2)[\s\/\*x]+23\s*mm/i.test(cleanName));
+
+    if (isAbs23mm) {
+      step = 5;
+      unit = "m";
+    } else if (/^76\./i.test(cleanCode) || /^79\./i.test(cleanCode)) {
+      // Worktops / Wall panels (half-sheet standard)
+      step = 0.5;
+      unit = "gab.";
+    } else if (/^73\./i.test(cleanCode)) {
+      // Laminates (quarter-sheet standard)
+      step = 0.25;
+      unit = "gab.";
+    }
+
+    // 2. If container has explicit HTML inputs or tooltips, prioritize DOM data
+    if (container) {
+      // Check #qty-tooltip (e.g. "Šo produktu ir iespējams iegādāties ar soli 5")
+      const tooltip = container.querySelector("#qty-tooltip, .qty-tooltip-step-value, [class*='qty-tooltip']");
+      if (tooltip) {
+        const text = tooltip.innerText || "";
+        const match = text.match(/soli\s*([0-9]+(?:[\.,][0-9]+)?)/i) || text.match(/(\d+(?:[\.,]\d+)?)/);
+        if (match) {
+          const parsed = parseFloat(match[1].replace(",", "."));
+          if (!isNaN(parsed) && parsed > 0) {
+            step = parsed;
+          }
+        }
+      }
+
+      // Check input elements for data-validate, step attribute, and current value
+      const qtyInput = container.querySelector(
+        'input.qty, input[name="qty"], #qty, [name="qty"], #configurable-qty-selector'
+      );
+      if (qtyInput) {
+        const valAttr = qtyInput.getAttribute("data-validate");
+        if (valAttr) {
+          try {
+            const valObj = JSON.parse(valAttr);
+            if (valObj && valObj["validate-item-quantity"]) {
+              const inc = parseFloat(valObj["validate-item-quantity"].qtyIncrements);
+              if (!isNaN(inc) && inc > 0) step = inc;
+            }
+          } catch (e) {
+            const m = valAttr.match(/qtyIncrements["']?\s*:\s*([0-9\.]+)/);
+            if (m) {
+              const inc = parseFloat(m[1]);
+              if (!isNaN(inc) && inc > 0) step = inc;
+            }
+          }
+        }
+
+        const inputStep = parseFloat(qtyInput.getAttribute("step"));
+        if (!isNaN(inputStep) && inputStep > 0 && inputStep !== 1) {
+          step = inputStep;
+        }
+
+        if (qtyInput.value) {
+          const parsedVal = parseFloat(qtyInput.value.replace(",", "."));
+          if (!isNaN(parsedVal) && parsedVal > 0) {
+            return { qty: parsedVal, step, unit };
+          }
+        }
+      }
+    }
+
+    // Default quantity when no input exists on card: equals the step (e.g. 5 for ABS 23mm, 1 for regular)
+    return { qty: step, step, unit };
+  }
+
   function scanSearchAutocomplete() {
     // Strictly target elements inside the search autocomplete popup/dropdown
     // (Never match regular catalog or search results grid cards)
@@ -214,24 +301,27 @@
         chooseBtn.title = `Atvērt ${name || 'preci'}, lai izvēlētos konkrētu izmēru pirms pievienošanas`;
         wrapper.appendChild(chooseBtn);
       } else {
+        const { qty, step, unit } = getProductQuantityAndStep(code, name, container, false);
+        const btnText = step > 1 ? `+ ${step}${unit} BC` : `+ BC`;
+
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "bc-bridge-btn-add bc-bridge-search-btn";
-        btn.title = `Pievienot 1 gab. (${code}) BC helperim`;
-        btn.innerHTML = `<span>+ BC</span>`;
+        btn.title = `Pievienot ${qty} ${unit} (${code}) BC helperim`;
+        btn.innerHTML = `<span>${btnText}</span>`;
 
         btn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
 
-          addItemToBuffer(code, name, 1, price);
+          addItemToBuffer(code, name, qty, price, step, unit);
 
           btn.classList.add("bc-bridge-btn-added-animate");
           const span = btn.querySelector("span");
           if (span) span.innerText = "✓ Pievienots!";
           setTimeout(() => {
             btn.classList.remove("bc-bridge-btn-added-animate");
-            if (span) span.innerText = "+ BC";
+            if (span) span.innerText = btnText;
           }, 1200);
         });
 
@@ -350,6 +440,9 @@
   }
 
   function createAddButton(productData, parentContainer, isPDP = false) {
+    const detected = getProductQuantityAndStep(productData.code, productData.name, parentContainer, isPDP);
+    const initialText = (!isPDP && detected.step > 1) ? `+ ${detected.step}${detected.unit} BC` : `+ BC`;
+
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "bc-bridge-btn-add";
@@ -357,9 +450,11 @@
       <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
         <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
       </svg>
-      <span>+ BC</span>
+      <span>${initialText}</span>
     `;
-    btn.title = `Pievienot Business Central buferim`;
+    btn.title = isPDP
+      ? `Pievienot Business Central buferim`
+      : `Pievienot ${detected.qty} ${detected.unit} (${productData.code}) Business Central buferim`;
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -373,24 +468,19 @@
       const nameToUse = (currentData && currentData.name) ? currentData.name : productData.name;
       const priceToUse = (currentData && currentData.price) ? currentData.price : productData.price;
 
-      // Read current quantity from input in that card/container (supports decimal e.g. 0.5, 2.5)
-      let qty = 1;
-      const qtyInput = parentContainer.querySelector('input.qty, input[name="qty"], #qty, [name="qty"]');
-      if (qtyInput && qtyInput.value) {
-        const parsed = parseFloat(qtyInput.value.replace(",", "."));
-        if (!isNaN(parsed) && parsed > 0) qty = parsed;
-      }
+      // Extract current quantity and step (either from input or product code defaults)
+      const { qty, step, unit } = getProductQuantityAndStep(codeToUse, nameToUse, parentContainer, isPDP);
 
-      addItemToBuffer(codeToUse, nameToUse, qty, priceToUse);
+      addItemToBuffer(codeToUse, nameToUse, qty, priceToUse, step, unit);
 
       // Visual feedback on button
       btn.classList.add("bc-bridge-btn-added-animate");
       const span = btn.querySelector("span");
-      const prevText = span ? span.innerText : "+ BC";
+      const resetText = (!isPDP && step > 1) ? `+ ${step}${unit} BC` : "+ BC";
       if (span) span.innerText = "✓ Pievienots!";
       setTimeout(() => {
         btn.classList.remove("bc-bridge-btn-added-animate");
-        if (span) span.innerText = prevText;
+        if (span) span.innerText = resetText;
       }, 1000);
     });
 
@@ -430,8 +520,13 @@
   // --------------------------------------------------------------------------
   // Buffer Operations
   // --------------------------------------------------------------------------
-  function addItemToBuffer(code, name, qty = 1, price = "") {
+  function addItemToBuffer(code, name, qty = null, price = "", step = null, unit = null) {
     if (!code) return;
+
+    const detected = getProductQuantityAndStep(code, name);
+    const finalStep = step !== null ? step : (detected.step || 1);
+    const finalUnit = unit !== null ? unit : (detected.unit || "gab.");
+    const finalQty = qty !== null ? qty : (detected.qty || finalStep);
 
     const existingIndex = state.buffer.findIndex(
       (i) => i.code.toLowerCase() === code.toLowerCase()
@@ -439,22 +534,28 @@
 
     if (existingIndex >= 0) {
       const prevQty = parseFloat(state.buffer[existingIndex].qty) || 0;
-      state.buffer[existingIndex].qty = Math.round((prevQty + qty) * 100) / 100;
+      state.buffer[existingIndex].qty = Math.round((prevQty + finalQty) * 100) / 100;
       if (name && !state.buffer[existingIndex].name) state.buffer[existingIndex].name = name;
       if (price && !state.buffer[existingIndex].price) state.buffer[existingIndex].price = price;
+      if (finalStep > 1 && (!state.buffer[existingIndex].step || state.buffer[existingIndex].step === 1)) {
+        state.buffer[existingIndex].step = finalStep;
+        state.buffer[existingIndex].unit = finalUnit;
+      }
     } else {
       state.buffer.push({
         id: "item_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
         code: code,
         name: name || "Furnitūras prece",
-        qty: qty,
+        qty: finalQty,
+        step: finalStep,
+        unit: finalUnit,
         price: price || "",
         addedAt: new Date().toISOString()
       });
     }
 
     saveBuffer();
-    showToast(`Pievienots BC buferim: ${code} (${qty} gab.)`, "success");
+    showToast(`Pievienots BC buferim: ${code} (${finalQty} ${finalUnit})`, "success");
     animateWidget();
   }
 
@@ -462,11 +563,18 @@
     const item = state.buffer.find((i) => i.id === id);
     if (!item) return;
 
-    const current = parseFloat(item.qty) || 1;
-    // For smaller values (< 1), step by 0.5
-    const step = current < 1 ? 0.5 : 1;
-    const newQty = Math.max(0.01, Math.round((current + delta * step) * 100) / 100);
+    const detected = getProductQuantityAndStep(item.code, item.name);
+    const effectiveStep = item.step || detected.step || (parseFloat(item.qty) < 1 ? 0.5 : 1);
+    const effectiveUnit = item.unit || detected.unit || "gab.";
+    const current = parseFloat(item.qty) || effectiveStep;
+
+    // Minimum quantity allowed is the step itself (e.g. min 5 for ABS 5m step)
+    const minQty = effectiveStep;
+    const newQty = Math.max(minQty, Math.round((current + delta * effectiveStep) * 100) / 100);
+
     item.qty = newQty;
+    item.step = effectiveStep;
+    item.unit = effectiveUnit;
     saveBuffer();
     renderDrawerList();
   }
@@ -475,9 +583,23 @@
     const item = state.buffer.find((i) => i.id === id);
     if (!item) return;
 
-    const parsed = parseFloat(String(newQty).replace(",", "."));
+    const detected = getProductQuantityAndStep(item.code, item.name);
+    const effectiveStep = item.step || detected.step || 1;
+    const effectiveUnit = item.unit || detected.unit || "gab.";
+
+    let parsed = parseFloat(String(newQty).replace(",", "."));
     if (!isNaN(parsed) && parsed > 0) {
+      if (effectiveStep > 1) {
+        const remainder = Math.round((parsed % effectiveStep) * 100) / 100;
+        if (remainder !== 0 && remainder !== effectiveStep) {
+          const snapped = Math.max(effectiveStep, Math.round(parsed / effectiveStep) * effectiveStep);
+          showToast(`Artikulam ${item.code} solis ir ${effectiveStep}${effectiveUnit}. Daudzums pielāgots uz ${snapped} ${effectiveUnit}.`, "info");
+          parsed = snapped;
+        }
+      }
       item.qty = Math.round(parsed * 100) / 100;
+      item.step = effectiveStep;
+      item.unit = effectiveUnit;
       saveBuffer();
       renderDrawerList();
     }
@@ -507,7 +629,7 @@
       if (request.action === "ADD_ITEM_FROM_SELECTION") {
         const cleanCode = cleanArticleCode(request.code);
         if (cleanCode) {
-          addItemToBuffer(cleanCode, "Iezīmētais artikuls", 1);
+          addItemToBuffer(cleanCode, "Iezīmētais artikuls");
         }
         sendResponse({ success: true });
       }
@@ -696,8 +818,8 @@
     const uniqueCount = state.buffer.length;
     const displayTotal = Math.round(totalCount * 100) / 100;
 
-    if (countEl) countEl.innerText = `${uniqueCount} dažādi artikuli (${displayTotal} gab.)`;
-    if (totalStatEl) totalStatEl.innerText = `${uniqueCount} artikuli · ${displayTotal} gab.`;
+    if (countEl) countEl.innerText = `${uniqueCount} dažādi artikuli (${displayTotal} vienības)`;
+    if (totalStatEl) totalStatEl.innerText = `${uniqueCount} artikuli · ${displayTotal} vienības`;
 
     if (state.buffer.length === 0) {
       body.innerHTML = `
@@ -716,6 +838,10 @@
 
     body.innerHTML = "";
     state.buffer.forEach((item) => {
+      const detected = getProductQuantityAndStep(item.code, item.name);
+      const effectiveStep = item.step || detected.step || 1;
+      const effectiveUnit = item.unit || detected.unit || "gab.";
+
       const card = document.createElement("div");
       card.className = "bc-bridge-item-card";
       card.innerHTML = `
@@ -725,11 +851,14 @@
         </div>
         <p class="bc-bridge-item-name">${escapeHtml(item.name || "Furnitūras prece")}</p>
         <div class="bc-bridge-item-bottom">
-          <span class="bc-bridge-item-price">${escapeHtml(item.price || "")}</span>
+          <div class="bc-bridge-item-price-wrap">
+            <span class="bc-bridge-item-price">${escapeHtml(item.price || "")}</span>
+            ${effectiveStep && effectiveStep !== 1 ? `<span class="bc-bridge-item-step-badge" title="Preces solis: ${effectiveStep}${effectiveUnit}">solis: ${effectiveStep}${effectiveUnit}</span>` : ""}
+          </div>
           <div class="bc-bridge-qty-controls">
-            <button class="bc-bridge-qty-btn" data-action="dec" data-id="${item.id}">–</button>
-            <input type="number" class="bc-bridge-qty-input" value="${item.qty}" min="0.01" step="any" data-id="${item.id}">
-            <button class="bc-bridge-qty-btn" data-action="inc" data-id="${item.id}">+</button>
+            <button class="bc-bridge-qty-btn" data-action="dec" data-id="${item.id}" title="Samazināt par ${effectiveStep}">–</button>
+            <input type="number" class="bc-bridge-qty-input" value="${item.qty}" min="${effectiveStep}" step="${effectiveStep}" data-id="${item.id}" title="Solis: ${effectiveStep}${effectiveUnit}">
+            <button class="bc-bridge-qty-btn" data-action="inc" data-id="${item.id}" title="Palielināt par ${effectiveStep}">+</button>
           </div>
         </div>
       `;

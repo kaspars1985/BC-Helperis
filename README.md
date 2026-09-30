@@ -51,18 +51,21 @@ Ar **BC helperi**:
 ## 🛠️ Lietošana ikdienā
 
 ### 1. Preču pievienošana vietnē `eamf.lv`
-- **Ar oranžo pogu "+ BC":** Atveriet jebkuru preču sarakstu vai preces kartīti vietnē `eamf.lv`. Pie katras preces un pie daudzuma lauka atrodas poga **`+ BC`**. Ja precei ir izmēri (piemēram, virsmas garums), vispirms izvēlieties izmēru un tad spiediet `+ BC`.
+- **Ar oranžo pogu "+ BC":** Atveriet jebkuru preču sarakstu vai preces kartīti vietnē `eamf.lv`. Pie katras preces un pie daudzuma lauka atrodas poga **`+ BC`** (precēm ar specifisku soli poga parāda piemēram **`+ 5m BC`**).
+- **Automātisks preces solis (ABS malas, virsmas):** 
+  - ABS malām ar platumu 23 mm (kodi `.08.23`, `.2.23` u.c.) solis automātiski ir **5 m** gan no meklēšanas rezultātiem, gan kartītē, novēršot kļūdas pie ielīmēšanas Business Central.
+  - Galda virsmām un sienas paneļiem (`76.`, `79.`) tiek ievērots solis **0,5**.
 - **Meklēšanas uznirstošajā logā:** Ierakstiet meklētājā artikula kodu vai nosaukumu — atrastajās precēs parādās:
-  - Pilnajiem artikuliem: poga **`+ BC`** (uzreiz pievieno buferim un atstāj meklēšanas logu atvērtu, lai var pievienot vairākas preces);
-  - Precēm ar `.00` (galda virsmām, ABS malām): poga **`Izvēlēties izmēru ➔`**, kas aizved uz kartīti precīza izmēra izvēlei.
+  - Pilnajiem artikuliem: poga **`+ BC`** vai **`+ 5m BC`** (uzreiz pievieno buferim atbilstošā solī un atstāj meklēšanas logu atvērtu, lai var pievienot vairākas preces);
+  - Precēm ar `.00` (galda virsmām, ABS malām ar izmēru variantiem): poga **`Izvēlēties izmēru ➔`**, kas aizved uz kartīti precīza izmēra izvēlei.
 - **Ar peles labo taustiņu:** Iezīmējiet jebkuru artikula tekstu vietnē, uzklikšķiniet labo peles taustiņu un izvēlieties **"Pievienot BC helperim"**.
 
 ### 2. Peldošais bufera panelis
 - Lapas apakšējā labajā stūrī redzams apaļš indikators ar preču skaitu.
 - Uzklikšķinot uz tā, izbīdās pārskatāms panelis:
-  - Redzams artikuls, nosaukums, cena un daudzums;
+  - Redzams artikuls, nosaukums, cena, preces solis un daudzums;
   - **Artikulu var rediģēt uz vietas**, ja tas nepieciešams pirms kopēšanas;
-  - Daudzumu var mainīt ar `[-]` un `[+]` pogām vai ierakstīt lauciņā (atbalsta arī komatdaļskaitļus, piem., `0,5` vai `2,5`);
+  - Daudzumu var mainīt ar `[-]` un `[+]` pogām atbilstoši preces solim (piem., 5 ➔ 10 ➔ 15 m) vai ierakstīt lauciņā;
   - Nevajadzīgās preces var dzēst ar `✕`;
   - Dati saglabājas automātiski pat tad, ja aizverat vai pārlādējat lapu!
 
