@@ -156,10 +156,26 @@
   }
 
   function scanSearchAutocomplete() {
-    // Target all search result item cards (handles Amasty Xsearch and native Magento autocomplete)
-    const searchItems = document.querySelectorAll(
-      ".product-item-details, .amsearch-autocomplete .product-item, .search-autocomplete .product-item, [class*='amsearch'] .product-item-info"
+    // Strictly target elements inside the search autocomplete popup/dropdown
+    // (Never match regular catalog or search results grid cards)
+    const popupContainers = document.querySelectorAll(
+      "#search_autocomplete, .search-autocomplete, .amsearch-autocomplete, [class*='amsearch-autocomplete'], [class*='xsearch-autocomplete'], .amsearch-products"
     );
+
+    const searchItems = [];
+    if (popupContainers.length > 0) {
+      popupContainers.forEach((popup) => {
+        popup.querySelectorAll(".product-item-details, .product-item, .item").forEach((el) => {
+          if (!searchItems.includes(el)) searchItems.push(el);
+        });
+      });
+    }
+
+    // Also match any element explicitly containing the search popup wrapper
+    document.querySelectorAll(".amsearch-wrapper-inner").forEach((inner) => {
+      const details = inner.closest(".product-item-details, .product-item, .item") || inner;
+      if (!searchItems.includes(details)) searchItems.push(details);
+    });
 
     searchItems.forEach((container) => {
       // Find SKU element
