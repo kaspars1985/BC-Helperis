@@ -35,6 +35,7 @@
     injectTabModal();
     injectSettingsModal();
     scanAndInjectButtons();
+    setupSearchInputListener();
     setupMutationObserver();
     setupMessageListener();
     checkForUpdates();
@@ -149,6 +150,83 @@
         }
       }
     }
+
+    // 3. Scan Search Autocomplete Popup (Amasty Xsearch / Quicksearch)
+    scanSearchAutocomplete();
+  }
+
+  function scanSearchAutocomplete() {
+    // Target all search result item cards (handles Amasty Xsearch and native Magento autocomplete)
+    const searchItems = document.querySelectorAll(
+      ".product-item-details, .amsearch-autocomplete .product-item, .search-autocomplete .product-item, [class*='amsearch'] .product-item-info"
+    );
+
+    searchItems.forEach((container) => {
+      // Find SKU element
+      const skuLink = container.querySelector(
+        ".amasty-xsearch-product-item-link, .product-item-sku a, .product-item-sku"
+      );
+      if (!skuLink) return;
+
+      // Deduplication: skip if a helper button already exists in this item
+      if (container.querySelector(".bc-bridge-btn-add, .bc-bridge-btn-choose-variant")) return;
+
+      const rawCode = (skuLink.getAttribute("title") || skuLink.innerText || "").trim();
+      const code = cleanArticleCode(rawCode);
+      if (!code) return;
+
+      // Find Name & Product Link
+      const nameEl = container.querySelector(".product-item-link, a[class*='product-item-link']");
+      const name = nameEl ? (nameEl.getAttribute("title") || nameEl.innerText || "").trim() : "";
+      const productUrl = nameEl ? (nameEl.getAttribute("href") || skuLink.getAttribute("href") || "#") : "#";
+
+      // Find Price
+      const priceEl = container.querySelector(".price-box .price, .price");
+      const price = priceEl ? priceEl.innerText.trim() : "";
+
+      // Target wrapper: inside .amsearch-wrapper-inner if available, or container
+      const wrapper = container.querySelector(".amsearch-wrapper-inner") || container;
+
+      // Check if code ends in .00 (configurable / placeholder matrix code)
+      const isPlaceholder = /\.00$/i.test(code);
+
+      if (isPlaceholder) {
+        const chooseBtn = document.createElement("a");
+        chooseBtn.className = "bc-bridge-btn-choose-variant";
+        chooseBtn.href = productUrl;
+        chooseBtn.innerHTML = `<span>Izvēlēties izmēru ➔</span>`;
+        chooseBtn.title = `Atvērt ${name || 'preci'}, lai izvēlētos konkrētu izmēru pirms pievienošanas`;
+        wrapper.appendChild(chooseBtn);
+      } else {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "bc-bridge-btn-add bc-bridge-search-btn";
+        btn.title = `Pievienot 1 gab. (${code}) BC helperim`;
+        btn.innerHTML = `
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          <span>+ BC</span>
+        `;
+
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          addItemToBuffer(code, name, 1, price);
+
+          btn.classList.add("bc-bridge-btn-added-animate");
+          const span = btn.querySelector("span");
+          if (span) span.innerText = "✓ Pievienots!";
+          setTimeout(() => {
+            btn.classList.remove("bc-bridge-btn-added-animate");
+            if (span) span.innerText = "+ BC";
+          }, 1200);
+        });
+
+        wrapper.appendChild(btn);
+      }
+    });
   }
 
   function extractProductFromCard(card) {
@@ -308,13 +386,31 @@
     return btn;
   }
 
+  function setupSearchInputListener() {
+    const bindSearch = () => {
+      const inputs = document.querySelectorAll("#search, input[name='q'], .search-autocomplete input, .minisearch input");
+      inputs.forEach((input) => {
+        if (input.__bcSearchBound) return;
+        input.__bcSearchBound = true;
+        ["input", "keyup", "focus"].forEach((evt) => {
+          input.addEventListener(evt, () => {
+            setTimeout(scanSearchAutocomplete, 150);
+            setTimeout(scanSearchAutocomplete, 450);
+          });
+        });
+      });
+    };
+    bindSearch();
+    setTimeout(bindSearch, 1500);
+  }
+
   function setupMutationObserver() {
     let timeout = null;
     const observer = new MutationObserver(() => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         scanAndInjectButtons();
-      }, 350);
+      }, 200);
     });
 
     observer.observe(document.body, { childList: true, subtree: true });

@@ -52,6 +52,9 @@ Ar **BC helperi**:
 
 ### 1. Preču pievienošana vietnē `eamf.lv`
 - **Ar oranžo pogu "+ BC":** Atveriet jebkuru preču sarakstu vai preces kartīti vietnē `eamf.lv`. Pie katras preces un pie daudzuma lauka atrodas poga **`+ BC`**. Ja precei ir izmēri (piemēram, virsmas garums), vispirms izvēlieties izmēru un tad spiediet `+ BC`.
+- **Meklēšanas uznirstošajā logā:** Ierakstiet meklētājā artikula kodu vai nosaukumu — atrastajās precēs parādās:
+  - Pilnajiem artikuliem: poga **`+ BC`** (uzreiz pievieno buferim un atstāj meklēšanas logu atvērtu, lai var pievienot vairākas preces);
+  - Precēm ar `.00` (galda virsmām, ABS malām): poga **`Izvēlēties izmēru ➔`**, kas aizved uz kartīti precīza izmēra izvēlei.
 - **Ar peles labo taustiņu:** Iezīmējiet jebkuru artikula tekstu vietnē, uzklikšķiniet labo peles taustiņu un izvēlieties **"Pievienot BC helperim"**.
 
 ### 2. Peldošais bufera panelis
