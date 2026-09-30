@@ -635,7 +635,7 @@
             <span>Ziņot par kļūdām vai ieteikt:</span><br>
             <a href="mailto:kasparsciematnieks@amf.lv?subject=BC%20helperis%20atsauksme" style="color: #ff5501; font-weight: 700; text-decoration: none;">kasparsciematnieks@amf.lv</a>
             <div style="margin-top: 4px; font-size: 10px; color: #94a3b8;">
-              v${CURRENT_VERSION} · <a href="https://github.com/${GITHUB_REPO}" target="_blank" style="color: #94a3b8; text-decoration: underline;">GitHub</a>
+              v${CURRENT_VERSION} · <a href="#" id="bc-bridge-check-updates-btn" style="color: #ff5501; text-decoration: underline;" title="Pārbaudīt atjauninājumus">Pārbaudīt</a> · <a href="https://github.com/${GITHUB_REPO}" target="_blank" style="color: #94a3b8; text-decoration: underline;">GitHub</a>
             </div>
           </div>
         </div>
@@ -652,6 +652,11 @@
     document.getElementById("bc-bridge-btn-export-csv").addEventListener("click", exportToCSV);
     document.getElementById("bc-bridge-btn-clear-all").addEventListener("click", clearAllItems);
     document.getElementById("bc-bridge-btn-settings").addEventListener("click", () => openSettingsModal());
+    document.getElementById("bc-bridge-check-updates-btn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      showToast("Pārbauda atjauninājumus...", "info");
+      checkForUpdates(true);
+    });
   }
 
   function toggleDrawer(open) {
@@ -1161,15 +1166,15 @@
   // --------------------------------------------------------------------------
   // Update Checker (GitHub Releases)
   // --------------------------------------------------------------------------
-  async function checkForUpdates() {
+  async function checkForUpdates(force = false) {
     try {
       const now = Date.now();
       const data = await chrome.storage.local.get(["bc_update_check"]);
       const lastCheck = data.bc_update_check?.timestamp || 0;
       const cachedInfo = data.bc_update_check?.info || null;
 
-      // Use cache if checked within last 24 hours
-      if (now - lastCheck < 24 * 60 * 60 * 1000 && cachedInfo) {
+      // Use cache if checked within last 1 hour and not forced
+      if (!force && (now - lastCheck < 60 * 60 * 1000) && cachedInfo) {
         if (isNewerVersion(cachedInfo.tag, CURRENT_VERSION)) {
           showUpdateNotification(cachedInfo);
         }
@@ -1179,7 +1184,10 @@
       const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`, {
         headers: { "Accept": "application/vnd.github.v3+json" }
       });
-      if (!resp.ok) return;
+      if (!resp.ok) {
+        if (force) showToast("Neizdevās sazināties ar GitHub.", "warn");
+        return;
+      }
 
       const release = await resp.json();
       const latestTag = release.tag_name || "";
@@ -1201,9 +1209,12 @@
 
       if (isNewerVersion(latestTag, CURRENT_VERSION)) {
         showUpdateNotification(updateInfo);
+        if (force) showToast(`Atrasta jauna versija: ${latestTag}!`, "success");
+      } else {
+        if (force) showToast(`Jums ir jaunākā versija (${CURRENT_VERSION})!`, "info");
       }
     } catch (e) {
-      // Non-blocking: fail quietly on network/API errors
+      if (force) showToast("Kļūda pārbaudot atjauninājumus.", "warn");
     }
   }
 
