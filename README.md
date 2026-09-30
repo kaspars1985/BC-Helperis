@@ -96,4 +96,5 @@ Business Central datus ielīmē no kreisās uz labo pusi. Ja kāds kolēģis ir 
 
 ## 💬 Atsauksmes un atbalsts
 Ja pamanāt kļūdu vai ir ieteikumi uzlabojumiem:  
-✉️ **kasparsciematnieks@amf.lv**
+- Kolēģi aicināti ziņot, izmantojot saziņas saiti tieši paplašinājuma bufera panelī vai iekšējos uzņēmuma kanālos.
+- Kļūdu pieteikumiem un ieteikumiem var izmantot arī [GitHub Issues](https://github.com/kaspars1985/BC-Helperis/issues).
