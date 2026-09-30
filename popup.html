@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+  <meta charset="UTF-8">
+  <title>BC helperis</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 340px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background: #ffffff;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo {
+      width: 30px;
+      height: 30px;
+      background: #ff5501;
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-text h1 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .header-text p {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .content {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .item-pill {
+      background: #ffffff;
+      border: 1px solid #ffd0b8;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .item-code {
+      font-weight: 700;
+      color: #cc4400;
+      font-family: ui-monospace, monospace;
+    }
+    .item-qty {
+      background: #fff5f0;
+      color: #ff5501;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      border: 1px solid #ffd0b8;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 24px 10px;
+      color: #64748b;
+      font-size: 13px;
+    }
+    .btn {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: #ff5501;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #e64c00;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    .footer {
+      padding: 10px 16px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+    .link {
+      color: #ff5501;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .link:hover {
+      text-decoration: underline;
+    }
+    .link-danger {
+      color: #d13438;
+    }
+    .toast {
+      background: #10b981;
+      color: #ffffff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+      display: none;
+    }
+    .feedback-footer {
+      padding: 9px 16px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      text-align: center;
+    }
+    .feedback-link {
+      color: #ff5501;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .feedback-link:hover {
+      text-decoration: underline;
+      color: #cc4400;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="icons/icon48.png" alt="BC helperis" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0;">
+    <div class="header-text">
+      <h1>BC helperis</h1>
+      <p id="stat-text">0 artikuli buferī</p>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="update-alert" style="display: none; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 7px 10px; font-size: 11px; color: #9a3412; margin-bottom: 8px; align-items: center; justify-content: space-between;">
+      <span>🎉 Jauna versija: <b id="update-tag"></b></span>
+      <a id="update-link" href="#" target="_blank" style="background: #ff5501; color: #fff; padding: 3px 8px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 10px;">Lejupielādēt</a>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <button id="btn-copy" class="btn btn-primary">
+      <span>Kopēt priekš BC (Ctrl+V)</span>
+    </button>
+
+    <button id="btn-switch-bc" class="btn btn-secondary">
+      <span>Pārslēgties uz BC</span>
+    </button>
+
+    <div id="item-list" class="card-list">
+      <!-- Items -->
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="https://www.eamf.lv" target="_blank" class="link">Atvērt eamf.lv</a>
+    <span id="btn-clear" class="link link-danger">Notīrīt sarakstu</span>
+  </div>
+
+  <div class="feedback-footer">
+    <span>Ziņot par kļūdām vai ieteikt:</span>
+    <a href="mailto:kasparsciematnieks@amf.lv?subject=BC%20helperis%20atsauksme" class="feedback-link">kasparsciematnieks@amf.lv</a>
+    <span style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+      v1.1.0 · <a href="https://github.com/kaspars1985/BC-Helperis" target="_blank" style="color: #94a3b8; text-decoration: underline;">GitHub</a>
+    </span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

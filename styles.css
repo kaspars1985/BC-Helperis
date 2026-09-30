@@ -1,0 +1,910 @@
+/* ==========================================================================
+   eAMF -> Business Central Bridge - Scoped Styles
+   Brand Theme: AM Furnitūra Brand Orange (#ff5501)
+   Prefix: bc-bridge- (Isolated to avoid clashes with eamf.lv)
+   ========================================================================== */
+
+:root {
+  --bc-primary: #ff5501;
+  --bc-primary-hover: #e64c00;
+  --bc-primary-dark: #cc4400;
+  --bc-accent: #ff732e;
+  --bc-primary-light: #fff5f0;
+  --bc-primary-border: #ffd0b8;
+  --bc-success: #107c41;
+  --bc-success-hover: #0b5a2f;
+  --bc-danger: #d13438;
+  --bc-bg-light: #f8fafc;
+  --bc-text-dark: #1e293b;
+  --bc-text-muted: #64748b;
+  --bc-border: #cbd5e1;
+  --bc-card-bg: #ffffff;
+  --bc-shadow: 0 10px 30px rgba(0, 0, 0, 0.16), 0 3px 8px rgba(0, 0, 0, 0.08);
+  --bc-radius: 10px;
+  --bc-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   GLOBAL RESET FOR EXTENSION CONTAINERS (Prevents Magento CSS pollution)
+   -------------------------------------------------------------------------- */
+#bc-bridge-drawer,
+#bc-bridge-drawer-container,
+#bc-bridge-modal-overlay,
+#bc-bridge-settings-overlay,
+.bc-bridge-floating-widget,
+.bc-bridge-toast {
+  font-family: var(--bc-font) !important;
+  box-sizing: border-box !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  line-height: normal !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
+#bc-bridge-drawer *,
+#bc-bridge-modal-overlay *,
+#bc-bridge-settings-overlay *,
+.bc-bridge-floating-widget * {
+  box-sizing: border-box !important;
+}
+
+/* Reset buttons inside drawer and modal so Magento styles don't stretch them */
+#bc-bridge-drawer button,
+#bc-bridge-modal-overlay button,
+#bc-bridge-settings-overlay button {
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. Inline "+ BC" Button on eamf.lv (AM Furnitūra Orange)
+   -------------------------------------------------------------------------- */
+.bc-bridge-btn-add {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: linear-gradient(135deg, #ff5501, #e64c00) !important;
+  color: #ffffff !important;
+  font-family: var(--bc-font) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  padding: 10px 14px !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(230, 76, 0, 0.4) !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(255, 85, 1, 0.28) !important;
+  transition: all 0.2s ease !important;
+  margin: 6px 0 0 0 !important;
+  z-index: 5 !important;
+  text-decoration: none !important;
+  outline: none !important;
+  text-transform: none !important;
+}
+
+.bc-bridge-btn-add:hover {
+  background: linear-gradient(135deg, #ff661a, #cc4400) !important;
+  box-shadow: 0 4px 12px rgba(255, 85, 1, 0.4) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+.bc-bridge-btn-add:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 1px 3px rgba(255, 85, 1, 0.3) !important;
+}
+
+.bc-bridge-btn-add svg {
+  width: 15px !important;
+  height: 15px !important;
+  fill: currentColor !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-btn-added-animate {
+  background: linear-gradient(135deg, #107c41, #0b5a2f) !important;
+  border-color: #107c41 !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. Floating Widget (Bottom-Right Badge)
+   -------------------------------------------------------------------------- */
+.bc-bridge-floating-widget {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 2147483640 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: #ffffff !important;
+  color: var(--bc-text-dark) !important;
+  padding: 8px 16px 8px 10px !important;
+  border-radius: 50px !important;
+  box-shadow: var(--bc-shadow) !important;
+  border: 2px solid var(--bc-primary) !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  user-select: none !important;
+}
+
+.bc-bridge-floating-widget:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 14px 30px rgba(255, 85, 1, 0.35) !important;
+}
+
+.bc-bridge-badge-icon {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  flex-shrink: 0 !important;
+  background: transparent !important;
+}
+
+.bc-bridge-badge-icon img,
+.bc-bridge-drawer-logo img,
+.bc-bridge-tab-icon img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: inherit !important;
+  display: block !important;
+}
+
+.bc-bridge-badge-counter {
+  position: absolute !important;
+  top: -4px !important;
+  right: -4px !important;
+  background: #d13438 !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  border-radius: 9px !important;
+  padding: 0 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid #ffffff !important;
+}
+
+.bc-bridge-badge-text {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  display: flex !important;
+  flex-direction: column !important;
+  line-height: 1.2 !important;
+}
+
+.bc-bridge-badge-sub {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: var(--bc-primary) !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Slide-out Drawer Panel
+   -------------------------------------------------------------------------- */
+.bc-bridge-drawer-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(3px) !important;
+  z-index: 2147483645 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: opacity 0.25s ease, visibility 0.25s !important;
+}
+
+.bc-bridge-drawer-overlay.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.bc-bridge-drawer {
+  position: fixed !important;
+  top: 0 !important;
+  right: -480px !important;
+  width: 440px !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  background: #ffffff !important;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.22) !important;
+  z-index: 2147483646 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow: hidden !important;
+}
+
+.bc-bridge-drawer.active {
+  right: 0 !important;
+}
+
+/* Drawer Header */
+.bc-bridge-drawer-header {
+  padding: 16px 20px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid var(--bc-border) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-drawer-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.bc-bridge-drawer-logo {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  background: transparent !important;
+  border-radius: 9px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+  overflow: hidden !important;
+}
+
+.bc-bridge-drawer-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.bc-bridge-drawer-subtitle {
+  font-size: 12px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.bc-bridge-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-icon-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  cursor: pointer !important;
+  border-radius: 6px !important;
+  color: #475569 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-icon-btn:hover {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+}
+
+#bc-bridge-btn-close:hover {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+  border-color: #fca5a5 !important;
+}
+
+/* Drawer Content / List */
+.bc-bridge-drawer-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 16px !important;
+  background: #f8fafc !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.bc-bridge-empty-state {
+  text-align: center !important;
+  padding: 60px 20px !important;
+  color: #64748b !important;
+}
+
+.bc-bridge-empty-icon {
+  width: 56px !important;
+  height: 56px !important;
+  margin: 0 auto 16px !important;
+  color: #94a3b8 !important;
+}
+
+.bc-bridge-empty-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  margin-bottom: 8px !important;
+}
+
+.bc-bridge-empty-text {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Item Card */
+.bc-bridge-item-card {
+  background: #ffffff !important;
+  border: 1px solid var(--bc-border) !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  transition: border-color 0.15s, box-shadow 0.15s !important;
+  width: 100% !important;
+}
+
+.bc-bridge-item-card:hover {
+  border-color: var(--bc-primary-border) !important;
+  box-shadow: 0 2px 10px rgba(255, 85, 1, 0.1) !important;
+}
+
+.bc-bridge-item-top {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Editable Item Code Input */
+.bc-bridge-item-code-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: var(--bc-primary-dark) !important;
+  background: var(--bc-primary-light) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid var(--bc-primary-border) !important;
+  outline: none !important;
+  max-width: 220px !important;
+  width: auto !important;
+  transition: all 0.15s !important;
+}
+
+.bc-bridge-item-code-input:focus {
+  background: #ffffff !important;
+  border-color: var(--bc-primary) !important;
+  box-shadow: 0 0 0 2px rgba(255, 85, 1, 0.2) !important;
+}
+
+.bc-bridge-item-delete {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  max-width: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  flex: 0 0 24px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: #94a3b8 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+  transition: all 0.15s !important;
+}
+
+.bc-bridge-item-delete:hover {
+  color: #dc2626 !important;
+  background: #fee2e2 !important;
+}
+
+.bc-bridge-item-name {
+  font-size: 13px !important;
+  color: #334155 !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+  font-weight: 500 !important;
+}
+
+.bc-bridge-item-bottom {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-top: 4px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid #f1f5f9 !important;
+}
+
+.bc-bridge-item-price {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  flex: 1 1 auto !important;
+  white-space: nowrap !important;
+}
+
+/* Quantity Spinner - Protected against Magento CSS stretching */
+.bc-bridge-qty-controls {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  flex: 0 0 auto !important;
+  height: 30px !important;
+}
+
+.bc-bridge-qty-btn {
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  flex: 0 0 30px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #f1f5f9 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+  line-height: 1 !important;
+  transition: background 0.15s ease !important;
+  user-select: none !important;
+}
+
+.bc-bridge-qty-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.bc-bridge-qty-input {
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  flex: 0 0 44px !important;
+  padding: 0 2px !important;
+  margin: 0 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border: none !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  -moz-appearance: textfield !important;
+}
+
+.bc-bridge-qty-input::-webkit-outer-spin-button,
+.bc-bridge-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+.bc-bridge-qty-input:focus {
+  border-color: var(--bc-primary) !important;
+}
+
+/* Drawer Footer */
+.bc-bridge-drawer-footer {
+  padding: 16px 20px !important;
+  background: #ffffff !important;
+  border-top: 1px solid var(--bc-border) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-summary-bar {
+  display: flex !important;
+  justify-content: space-between !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+}
+
+.bc-bridge-btn-main {
+  width: 100% !important;
+  padding: 12px 16px !important;
+  background: linear-gradient(135deg, var(--bc-primary), var(--bc-primary-dark)) !important;
+  color: #ffffff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-shadow: 0 3px 8px rgba(255, 85, 1, 0.35) !important;
+  transition: all 0.15s !important;
+}
+
+.bc-bridge-btn-main:hover {
+  background: linear-gradient(135deg, var(--bc-primary-hover), var(--bc-primary-dark)) !important;
+  box-shadow: 0 5px 14px rgba(255, 85, 1, 0.45) !important;
+}
+
+.bc-bridge-btn-main:active {
+  transform: translateY(1px) !important;
+}
+
+.bc-bridge-btn-secondary {
+  width: 100% !important;
+  padding: 11px 14px !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  transition: all 0.15s !important;
+}
+
+.bc-bridge-btn-secondary:hover {
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+}
+
+.bc-bridge-footer-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-top: 4px !important;
+}
+
+.bc-bridge-link-btn {
+  background: transparent !important;
+  border: none !important;
+  font-size: 12px !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  text-decoration: underline !important;
+  padding: 4px !important;
+}
+
+.bc-bridge-link-btn:hover {
+  color: var(--bc-danger) !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. Multi-Tab Visual Selector Modal
+   -------------------------------------------------------------------------- */
+.bc-bridge-modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 2147483648 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: all 0.2s ease !important;
+}
+
+.bc-bridge-modal-overlay.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.bc-bridge-modal {
+  background: #ffffff !important;
+  width: 540px !important;
+  max-width: 92vw !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #cbd5e1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  transform: scale(0.95) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.bc-bridge-modal-overlay.active .bc-bridge-modal {
+  transform: scale(1) !important;
+}
+
+.bc-bridge-modal-header {
+  padding: 18px 24px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.bc-bridge-modal-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+}
+
+.bc-bridge-modal-body {
+  padding: 20px 24px !important;
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.bc-bridge-tab-card {
+  padding: 14px 16px !important;
+  background: #f8fafc !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  transition: all 0.15s ease !important;
+}
+
+.bc-bridge-tab-card:hover {
+  background: var(--bc-primary-light) !important;
+  border-color: var(--bc-primary) !important;
+  box-shadow: 0 4px 12px rgba(255, 85, 1, 0.18) !important;
+  transform: translateY(-1px) !important;
+}
+
+.bc-bridge-tab-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+}
+
+.bc-bridge-tab-icon {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  background: var(--bc-primary) !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-tab-details {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  overflow: hidden !important;
+}
+
+.bc-bridge-tab-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.bc-bridge-tab-url {
+  font-size: 11px !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.bc-bridge-tab-badge {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 20px !important;
+  background: #ffefe5 !important;
+  color: var(--bc-primary-dark) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-tab-badge.recent {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.bc-bridge-modal-footer {
+  padding: 14px 24px !important;
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. Toast Notification System
+   -------------------------------------------------------------------------- */
+.bc-bridge-toast {
+  position: fixed !important;
+  bottom: 84px !important;
+  right: 24px !important;
+  z-index: 2147483647 !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  padding: 12px 18px !important;
+  border-radius: 8px !important;
+  font-family: var(--bc-font) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25) !important;
+  border-left: 4px solid var(--bc-primary) !important;
+  animation: bcBridgeFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.bc-bridge-toast.success {
+  border-left-color: #10b981 !important;
+}
+
+.bc-bridge-toast.warn {
+  border-left-color: #f59e0b !important;
+}
+
+@keyframes bcBridgeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Update Notification Banner
+   -------------------------------------------------------------------------- */
+.bc-bridge-update-banner {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+  border-bottom: 1px solid #fed7aa !important;
+  padding: 10px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  font-size: 12px !important;
+  color: #9a3412 !important;
+  animation: bcBridgeFadeIn 0.3s ease !important;
+}
+
+.bc-bridge-update-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 8px !important;
+}
+
+.bc-bridge-update-text {
+  font-weight: 500 !important;
+}
+
+.bc-bridge-update-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.bc-bridge-update-btn {
+  background: #ff5501 !important;
+  color: #ffffff !important;
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  text-decoration: none !important;
+  transition: background 0.15s ease !important;
+}
+
+.bc-bridge-update-btn:hover {
+  background: #ea580c !important;
+  color: #ffffff !important;
+}
+
+.bc-bridge-update-dismiss {
+  background: none !important;
+  border: none !important;
+  color: #9a3412 !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  padding: 2px 4px !important;
+  opacity: 0.7 !important;
+  line-height: 1 !important;
+}
+
+.bc-bridge-update-dismiss:hover {
+  opacity: 1 !important;
+}
+

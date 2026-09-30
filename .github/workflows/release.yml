@@ -1,0 +1,75 @@
+name: Release BC Helperis
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate manifest.json
+        run: |
+          jq . manifest.json > /dev/null
+          echo "Manifest is valid JSON"
+
+      - name: Package Extension ZIP
+        run: |
+          zip -r BC-helperis.zip \
+            manifest.json \
+            content.js \
+            background.js \
+            popup.html \
+            popup.js \
+            styles.css \
+            icons/ \
+            UZSTADISANAS_PAMACIBA.txt \
+            README.md \
+            -x "*.DS_Store" "*Thumbs.db*"
+
+      - name: Determine Version Tag
+        id: get_version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            MANIFEST_VER=$(jq -r .version manifest.json)
+            TAG="v${MANIFEST_VER}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Create or Update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.get_version.outputs.tag }}"
+          echo "Publishing release for $TAG..."
+
+          cat << 'EOF' > release_notes.md
+          ### 🚀 BC helperis
+
+          Oficiālā pārlūka paplašinājuma pakotne.
+
+          #### 📦 Uzstādīšanas soļi:
+          1. Lejupielādējiet **BC-helperis.zip** zemāk.
+          2. Ar labo peles taustiņu uzspiediet uz faila un izvēlieties **Izvilkt visu... (Extract All)**.
+          3. Atveriet pārlūku:
+             - Edge: `edge://extensions`
+             - Chrome: `chrome://extensions`
+          4. Ieslēdziet **Izstrādātāja režīmu (Developer mode)**.
+          5. Spiediet **Ielādēt neiepakotu (Load unpacked)** un norādiet izvilkto mapi.
+          EOF
+
+          gh release create "$TAG" BC-helperis.zip \
+            --title "BC helperis $TAG" \
+            --notes-file release_notes.md \
+            --clobber
+

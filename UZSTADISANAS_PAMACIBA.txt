@@ -1,0 +1,76 @@
+=====================================================
+  BC helperis (eAMF -> Business Central)
+=====================================================
+Ērts palīgs AM Furnitūra komandai: ātra preču un 
+daudzumu atlase no eamf.lv un ievietošana Microsoft 
+Business Central pasūtījumos.
+
+KĀ UZSTĀDĪT MICROSOFT EDGE (aizņem 30 sek.):
+-----------------------------------------------------
+1. Izvelciet (Unzip) šo arhīvu jebkurā mapē datorā
+   (piemēram: Dokumentos vai C:\BC-helperis).
+
+2. Atveriet Microsoft Edge un adreses joslā ievadiet:
+   edge://extensions
+   (vai spiediet [...] izvēlni -> Paplašinājumi -> Pārvaldīt paplašinājumus).
+
+3. Kreisajā sānjoslā IESLĒDZIET slēdzi:
+   'Developer mode' (Izstrādātāja režīms).
+
+4. Augšā parādīsies poga:
+   'Load unpacked' (Ielādēt neiepakotu).
+   Uzklikšķiniet un norādiet izvilkto mapi.
+
+5. Gatavs! Edge rīkjoslā (pie puzles ikonas)
+   uzklikšķiniet uz acs ikonas pie 'BC helperis', lai tā vienmēr būtu redzama.
+
+
+KĀ UZSTĀDĪT GOOGLE CHROME:
+-----------------------------------------------------
+1. Atveriet Chrome un adreses joslā ievadiet:
+   chrome://extensions
+2. Augšējā labajā stūrī ieslēdziet 'Developer mode'.
+3. Augšējā kreisajā pusē spiediet 'Load unpacked' un izvēlieties mapi.
+
+
+LIETOŠANA IKDIENĀ:
+-----------------------------------------------------
+1. Ejiet uz eamf.lv un pie precēm spiediet oranžo '+ BC' pogu.
+   - Preču variantiem (piem., galda virsmām 600mm / 920mm) 
+     vispirms izvēlieties izmēru – paplašinājums automātiski 
+     paņems pareizo artikula numuru.
+   - Var arī iezīmēt jebkuru tekstu un spiest peles labo taustiņu 
+     -> "Pievienot BC helperim".
+
+2. Apakšējā labajā stūrī atveriet oranžo paneli:
+   - Šeit var rediģēt daudzumus (atbalsta arī decimāldaļas, piem., 0,5 vai 2,5);
+   - Vajadzības gadījumā var precizēt artikula kodu uz vietas.
+
+3. Nospiediet 'Pārslēgties uz BC pasūtījumu':
+   - Ja atvērti vairāki pasūtījumi, izvēlieties vajadzīgo no saraksta 
+     (parādās pasūtījuma numurs un klients, piem., PPAS0012345 · Klienta Nosaukums).
+
+4. Business Central pasūtījuma rindās:
+   - Uzklikšķiniet uz brīvās rindas 1. kolonnā 'Tips' (lai šūna ir aktīva);
+   - Nospiediet Ctrl + V!
+   - Business Central automātiski aizpildīs Tips (Prece), Nr., Pasūtītais daudzums,
+     un pats ielasīs no sistēmas Aprakstu, Mērvienību un Cenas!
+
+
+KAS JĀDARA, JA KOLONNU SECĪBA BC IR CITĀDA?
+-----------------------------------------------------
+Business Central datus no starpliktuves ielīmē no kreisās uz labo pusi.
+Ja kāds kolēģis ir pielāgojis savu pasūtījuma rindu skatu:
+1. BC helpera panelī uzklikšķiniet uz zobrata ikonas (⚙️ Iestatījumi).
+2. Izvēlieties vajadzīgo formātu:
+   - AM Furnitūra / BC (Noklusējums): Prece -> Nr. -> Pasūtītais daudzums
+   - Kompakts: Nr. -> Pasūtītais daudzums (ja Tips nav vai klikšķina uzreiz uz Nr.)
+   - Pielāgota veidne: brīva secība ar Tab atdalītājiem.
+3. Spiediet "Saglabāt iestatījumus".
+
+
+ATSAUKSMES UN IETEIKUMI:
+-----------------------------------------------------
+Ja pamanāt kļūdu vai ir ieteikumi uzlabojumiem:
+✉️ kasparsciematnieks@amf.lv
+=====================================================
