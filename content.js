@@ -11,7 +11,7 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.2";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.3";
 
   let state = {
     buffer: [],
@@ -341,36 +341,31 @@
       name = linkEl.innerText.trim();
     }
 
-    // 1. Highest priority: Visible "Artikuls [KODS]" in text!
-    // On eamf.lv, the displayed card text shows: "Artikuls 76.W1000.ST76.92".
-    // When the user clicks a swatch (e.g. 600 mm vs 920 mm), eamf updates this exact text.
-    const allText = card.innerText || "";
-    const artikulsMatch = allText.match(/artikuls[:\s]+([A-Z0-9\.\-\/]+)/i);
-    if (artikulsMatch && artikulsMatch[1]) {
-      code = artikulsMatch[1].trim();
+    // 1. Highest priority: Specific SKU elements (updated by swatch renderer or default)
+    const skuEl = card.querySelector(".product-item-sku, .sku .value, [itemprop='sku'], .sku");
+    if (skuEl && skuEl.innerText.trim()) {
+      code = cleanArticleCode(skuEl.innerText);
     }
 
-    // 2. Second priority: Specific SKU elements (excluding data-product-sku which has parent matrix SKU)
+    // 2. Second priority: Parse from visible Artikuls text with safe boundaries
     if (!code) {
-      const skuEl = card.querySelector(".product-item-sku, .sku .value, .sku");
-      if (skuEl) {
-        code = skuEl.innerText.replace(/artikuls[:\s]*/i, "").trim();
-      }
+      code = parseArtikulsFromText(card.innerText || "");
     }
 
-    // 3. Third priority: Furniture article regex pattern
-    if (!code) {
-      const match = allText.match(ARTICLE_REGEX);
-      if (match) {
-        code = match[1];
-      }
-    }
-
-    // 4. Fallback: data-product-sku attribute
+    // 3. Third priority: Form data-product-sku attribute
     if (!code) {
       const dataSkuEl = card.querySelector("[data-product-sku]");
       if (dataSkuEl) {
-        code = dataSkuEl.getAttribute("data-product-sku") || dataSkuEl.innerText.trim();
+        code = cleanArticleCode(dataSkuEl.getAttribute("data-product-sku") || dataSkuEl.innerText);
+      }
+    }
+
+    // 4. Fourth priority: Furniture article regex pattern
+    if (!code) {
+      const allText = card.innerText || "";
+      const match = allText.match(ARTICLE_REGEX);
+      if (match) {
+        code = match[1];
       }
     }
 
@@ -388,39 +383,37 @@
     let name = "";
     let price = "";
 
-    // Title
-    const titleEl = container.querySelector(".page-title span, h1");
+    // Title: check container or document level (h1 is often outside .product-info-main)
+    const titleEl = container.querySelector(".page-title span, [data-ui-id='page-title-wrapper'], h1") ||
+                    document.querySelector(".page-title span, [data-ui-id='page-title-wrapper'], h1");
     if (titleEl) {
       name = titleEl.innerText.trim();
     }
 
-    // 1. Highest priority: Visible Artikuls text
-    const allText = container.innerText || "";
-    const artikulsMatch = allText.match(/artikuls[:\s]+([A-Z0-9\.\-\/]+)/i);
-    if (artikulsMatch && artikulsMatch[1]) {
-      code = artikulsMatch[1].trim();
+    // 1. Highest priority: Authoritative SKU element (where Magento writes the active swatch SKU)
+    const skuEl = container.querySelector(".sku .value, [itemprop='sku'], .product.attribute.sku .value, .product-item-sku");
+    if (skuEl && skuEl.innerText.trim()) {
+      code = cleanArticleCode(skuEl.innerText);
     }
 
-    // 2. Specific SKU element
+    // 2. Second priority: Parse from visible text with safe boundaries
     if (!code) {
-      const skuEl = container.querySelector(".sku .value, [itemprop='sku'], .product.attribute.sku, .sku");
-      if (skuEl) {
-        code = skuEl.innerText.trim();
-      }
+      code = parseArtikulsFromText(container.innerText || "");
     }
 
-    // 3. Furniture article regex
-    if (!code) {
-      const match = allText.match(ARTICLE_REGEX);
-      if (match) code = match[1];
-    }
-
-    // 4. Fallback: data-product-sku
+    // 3. Third priority: Form data-product-sku attribute
     if (!code) {
       const dataSkuEl = container.querySelector("[data-product-sku]");
       if (dataSkuEl) {
-        code = dataSkuEl.getAttribute("data-product-sku") || "";
+        code = cleanArticleCode(dataSkuEl.getAttribute("data-product-sku") || "");
       }
+    }
+
+    // 4. Fourth priority: Furniture article regex
+    if (!code) {
+      const allText = container.innerText || "";
+      const match = allText.match(ARTICLE_REGEX);
+      if (match) code = match[1];
     }
 
     // Price
@@ -433,11 +426,27 @@
   function cleanArticleCode(code) {
     if (!code) return "";
     return code
+      .replace(/\u00a0/g, " ")
       .replace(/^(artikuls|kods|sku)[:\s]*/i, "")
-      .replace(/[\r\n\t]/g, "")
+      .replace(/[\r\n\t]+/g, " ")
       .replace(/[,;]+$/g, "")
+      .replace(/\s+/g, " ")
       .trim();
   }
+
+  function parseArtikulsFromText(text) {
+    if (!text) return "";
+    const lineMatch = text.match(/(?:artikuls|kods|sku)[:\s]+([^\r\n<]+)/i);
+    if (!lineMatch) return "";
+    let raw = lineMatch[1].trim();
+    raw = raw.split(/\b(?:noliktav[āa]|skaits|cena|pieejam[īi]ba|nav pieejams|pievienot|solis|€|eur)\b/i)[0].trim();
+    const cleaned = cleanArticleCode(raw);
+    if (/^[A-Z0-9\.\-\/]+(?:\s+[A-Z0-9\.\-\/]+)*$/i.test(cleaned)) {
+      return cleaned;
+    }
+    return "";
+  }
+
 
   function createAddButton(productData, parentContainer, isPDP = false) {
     const detected = getProductQuantityAndStep(productData.code, productData.name, parentContainer, isPDP);
