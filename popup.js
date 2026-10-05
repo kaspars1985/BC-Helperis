@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const toast = document.getElementById("toast");
 
   let buffer = [];
-  let settings = { formatPreset: "lv_std", customTemplate: "{Type}\t{No}\t\t{Qty}" };
+  let settings = { formatPreset: "lv_std", customTemplate: "{Type}\t\t{No}\t\t\t{Qty}" };
 
   async function loadData() {
     const data = await chrome.storage.local.get(["bc_buffer", "bc_settings", "bc_update_check"]);
@@ -106,13 +106,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function formatRows() {
     const preset = settings.formatPreset || "amf_std";
+    const customTpl = settings.customTemplate || "{Type}\t\t{No}\t\t\t{Qty}";
     const lines = buffer.map((item) => {
       const code = (item.code || "").trim();
       const rawQty = item.qty !== undefined && item.qty !== null ? item.qty : 1;
       const qty = String(rawQty).replace(".", ",");
       if (preset === "amf_std" || preset === "lv_std") return `Prece\t${code}\t${qty}`;
       if (preset === "compact") return `${code}\t${qty}`;
-      if (preset === "en_std") return `Item\t${code}\t${qty}`;
+      if (preset === "en_std") return `Prece\t\t${code}\t\t\t${qty}`;
+      if (preset === "custom") {
+        return customTpl
+          .replace(/\{Type\}/g, "Prece")
+          .replace(/\{No\}/g, code)
+          .replace(/\{Qty\}/g, qty)
+          .replace(/\{Price\}/g, item.price || "")
+          .replace(/\{Name\}/g, item.name || "")
+          .replace(/\\t/g, "\t");
+      }
       return `Prece\t${code}\t${qty}`;
     });
     return lines.join("\r\n") + "\r\n";

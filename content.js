@@ -11,9 +11,10 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.4";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.5";
 
   const VERSION_CHANGELOG = {
+    "1.2.5": "Pievienots standarta Business Central pilnā izkārtojuma atbalsts (Tips -> [PVN] -> Nr. -> [Vienības] -> [Apraksts] -> Daudzums) un uzlabota pielāgoto veidņu darbība.",
     "1.2.4": "Kompaktāks artikulu izkārtojums bufera logā (-40% augstums) un versiju jaunumu paziņojumi.",
     "1.2.3": "Novērsta preču artikulu un krāsu nogriešana (piem. AVENTOS HK-S uzlikām ar atstarpēm kodā un kreisās/labās puses atpazīšana).",
     "1.2.2": "Automātisks pasūtījuma soļa un mērvienības aprēķins ABS lentām (5m solis) un kataloga precēm.",
@@ -25,7 +26,7 @@
     buffer: [],
     settings: {
       formatPreset: "lv_std", // 'lv_std', 'en_std', 'compact', 'custom'
-      customTemplate: "{Type}\t{No}\t\t{Qty}",
+      customTemplate: "{Type}\t\t{No}\t\t\t{Qty}",
       lastTargetTabId: null
     },
     drawerOpen: false,
@@ -1110,8 +1111,8 @@
         // Artikuls [TAB] Pasūtītais daudzums
         return `${code}\t${qty}`;
       } else if (preset === "en_std") {
-        // Item [TAB] Artikuls [TAB] Quantity
-        return `Item\t${code}\t${qty}`;
+        // Standarta BC pilnais izkārtojums: Tips -> [PVN] -> Nr. -> [Vienības] -> [Apraksts] -> Pasūtītais daudzums
+        return `Prece\t\t${code}\t\t\t${qty}`;
       } else if (preset === "custom") {
         return customTpl
           .replace(/\{Type\}/g, "Prece")
@@ -1231,8 +1232,8 @@
           <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 13px;">
             <input type="radio" name="bc-format-preset" value="en_std" style="margin-top: 3px;">
             <div>
-              <b>Standarta EN: Item → No. → Quantity</b>
-              <div style="font-size: 11px; color: #64748b;">Formāts: Item [TAB] Artikuls [TAB] [TAB] Quantity</div>
+              <b>Standarta BC / EN: Tips → [PVN] → Nr. → [Apraksts] → Pasūtītais daudzums</b>
+              <div style="font-size: 11px; color: #64748b;">Formāts: Prece [TAB] [TAB] Artikuls [TAB] [TAB] [TAB] Pasūtītais daudzums (standarta kolonnu secība)</div>
             </div>
           </label>
 
@@ -1252,9 +1253,9 @@
             </div>
           </label>
 
-          <div id="bc-custom-tpl-wrap" style="display: none; flex-direction: column; gap: 4px;">
-            <span style="font-size: 12px; font-weight: 600;">Pielāgotā veidne:</span>
-            <input type="text" id="bc-custom-tpl-input" class="bc-bridge-qty-input" style="width: 100%; text-align: left; height: 32px; padding: 0 8px;" value="{Type}\\t{No}\\t\\t{Qty}">
+          <div id="bc-custom-tpl-wrap" style="display: none; flex-direction: column; gap: 6px; width: 100%; box-sizing: border-box; margin-top: 4px;">
+            <span style="font-size: 12px; font-weight: 600; color: #1e293b;">Pielāgotā veidne:</span>
+            <input type="text" id="bc-custom-tpl-input" class="bc-bridge-template-input" value="{Type}\\t\\t{No}\\t\\t\\t{Qty}" spellcheck="false" autocomplete="off">
             <span style="font-size: 11px; color: #64748b;">Pieejamie mainīgie: {Type}, {No}, {Qty}, {Name}, {Price}</span>
           </div>
         </div>
