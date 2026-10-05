@@ -11,7 +11,15 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.3";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.4";
+
+  const VERSION_CHANGELOG = {
+    "1.2.4": "Kompaktāks artikulu izkārtojums bufera logā (-40% augstums) un versiju jaunumu paziņojumi.",
+    "1.2.3": "Novērsta preču artikulu un krāsu nogriešana (piem. AVENTOS HK-S uzlikām ar atstarpēm kodā un kreisās/labās puses atpazīšana).",
+    "1.2.2": "Automātisks pasūtījuma soļa un mērvienības aprēķins ABS lentām (5m solis) un kataloga precēm.",
+    "1.2.1": "Uzlabota meklēšanas automātiskās pabeigšanas integrācija un interfeisa stabilitāte.",
+    "1.2.0": "Pievienota tieša datu pārsūtīšana uz Business Central ciļņiem un pielāgojami šabloni."
+  };
 
   let state = {
     buffer: [],
@@ -1340,11 +1348,25 @@
 
       const release = await resp.json();
       const latestTag = release.tag_name || "";
+      const cleanLatest = latestTag.replace(/^v/, "").trim();
+      const cleanCurrent = CURRENT_VERSION.replace(/^v/, "").trim();
+
+      // Determine changelog notes for latest version
+      let notes = VERSION_CHANGELOG[cleanLatest] || "";
+      if (!notes && release.body) {
+        const lines = release.body
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l && !l.startsWith("#") && !l.startsWith("Oficiālā") && !l.startsWith("1.") && !l.startsWith("2.") && !l.startsWith("3."));
+        if (lines.length > 0) notes = lines[0].replace(/^[-*]\s*/, "");
+      }
+
       const downloadAsset = (release.assets || []).find((a) => a.name && a.name.endsWith(".zip"));
       const downloadUrl = downloadAsset ? downloadAsset.browser_download_url : `https://github.com/${GITHUB_REPO}/releases/latest/download/BC-helperis.zip`;
 
       const updateInfo = {
         tag: latestTag,
+        notes: notes,
         htmlUrl: release.html_url || `https://github.com/${GITHUB_REPO}/releases/latest`,
         downloadUrl: downloadUrl
       };
@@ -1358,9 +1380,15 @@
 
       if (isNewerVersion(latestTag, CURRENT_VERSION)) {
         showUpdateNotification(updateInfo);
-        if (force) showToast(`Atrasta jauna versija: ${latestTag}!`, "success");
+        if (force) {
+          const notesText = notes ? `\nJaunumi: ${notes}` : "";
+          showToast(`Pieejama jauna versija: ${latestTag}!${notesText}`, "success");
+        }
       } else {
-        if (force) showToast(`Jums ir jaunākā versija (${CURRENT_VERSION})!`, "info");
+        if (force) {
+          const currentNotes = VERSION_CHANGELOG[cleanCurrent] ? `\nPēdējie uzlabojumi:\n${VERSION_CHANGELOG[cleanCurrent]}` : "";
+          showToast(`✓ Jums ir jaunākā versija (${CURRENT_VERSION})!${currentNotes}`, "info");
+        }
       }
     } catch (e) {
       if (force) showToast("Kļūda pārbaudot atjauninājumus.", "warn");
@@ -1392,7 +1420,10 @@
     banner.className = "bc-bridge-update-banner";
     banner.innerHTML = `
       <div class="bc-bridge-update-content">
-        <span class="bc-bridge-update-text">🎉 Pieejama jauna versija <b>${escapeHtml(info.tag)}</b>!</span>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span class="bc-bridge-update-text">🎉 Pieejama jauna versija <b>${escapeHtml(info.tag)}</b>!</span>
+          ${info.notes ? `<span class="bc-bridge-update-notes"><b>Jaunumi:</b> ${escapeHtml(info.notes)}</span>` : ""}
+        </div>
         <div class="bc-bridge-update-actions">
           <a href="${escapeHtml(info.downloadUrl)}" target="_blank" class="bc-bridge-update-btn">Lejupielādēt ZIP</a>
           <button class="bc-bridge-update-dismiss" id="bc-bridge-dismiss-update" title="Aizvērt">✕</button>
@@ -1421,12 +1452,13 @@
     toast.innerText = message;
     document.body.appendChild(toast);
 
+    const displayDuration = message.includes("\n") ? 6000 : 3500;
     setTimeout(() => {
       toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
       toast.style.opacity = "0";
       toast.style.transform = "translateY(15px)";
       setTimeout(() => toast.remove(), 300);
-    }, 3500);
+    }, displayDuration);
   }
 
   function escapeHtml(str) {

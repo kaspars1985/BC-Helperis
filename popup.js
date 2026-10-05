@@ -40,9 +40,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       const alertEl = document.getElementById("update-alert");
       const tagEl = document.getElementById("update-tag");
       const linkEl = document.getElementById("update-link");
+      const notesEl = document.getElementById("update-notes");
       if (alertEl && tagEl && linkEl) {
         tagEl.innerText = info.tag;
         linkEl.href = info.downloadUrl || "https://github.com/kaspars1985/BC-Helperis/releases/latest";
+        if (notesEl && info.notes) {
+          notesEl.innerText = info.notes;
+          notesEl.style.display = "block";
+        } else if (notesEl) {
+          notesEl.style.display = "none";
+        }
         alertEl.style.display = "flex";
       }
     }
