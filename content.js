@@ -11,9 +11,10 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.3.0";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.3.1";
 
   const VERSION_CHANGELOG = {
+    "1.3.1": "Iespēja manuāli ievadīt artikulus un daudzumus tieši paplašinājumā (artikuliem no galvas), noņemts liekais pamācības logs un uzlaboti relīžu apraksti.",
     "1.3.0": "Iespēja manuāli ievadīt artikulus un daudzumus tieši paplašinājumā (artikuliem no galvas), noņemts liekais pamācības logs.",
     "1.2.5": "Pievienots standarta Business Central pilnā izkārtojuma atbalsts (Tips -> [PVN] -> Nr. -> [Vienības] -> [Apraksts] -> Daudzums) un uzlabota pielāgoto veidņu darbība.",
     "1.2.4": "Kompaktāks artikulu izkārtojums bufera logā (-40% augstums) un versiju jaunumu paziņojumi.",
