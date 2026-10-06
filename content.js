@@ -11,9 +11,10 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.2.5";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.3.0";
 
   const VERSION_CHANGELOG = {
+    "1.3.0": "Iespēja manuāli ievadīt artikulus un daudzumus tieši paplašinājumā (artikuliem no galvas), noņemts liekais pamācības logs.",
     "1.2.5": "Pievienots standarta Business Central pilnā izkārtojuma atbalsts (Tips -> [PVN] -> Nr. -> [Vienības] -> [Apraksts] -> Daudzums) un uzlabota pielāgoto veidņu darbība.",
     "1.2.4": "Kompaktāks artikulu izkārtojums bufera logā (-40% augstums) un versiju jaunumu paziņojumi.",
     "1.2.3": "Novērsta preču artikulu un krāsu nogriešana (piem. AVENTOS HK-S uzlikām ar atstarpēm kodā un kreisās/labās puses atpazīšana).",
@@ -575,6 +576,13 @@
     saveBuffer();
     showToast(`Pievienots BC buferim: ${code} (${finalQty} ${finalUnit})`, "success");
     animateWidget();
+    if (state.drawerOpen) {
+      renderDrawerList();
+      const body = document.getElementById("bc-bridge-drawer-body");
+      if (body) {
+        body.scrollTop = body.scrollHeight;
+      }
+    }
   }
 
   function updateItemQty(id, delta) {
@@ -707,6 +715,75 @@
   }
 
   // --------------------------------------------------------------------------
+  // Manual Item Entry Handler
+  // --------------------------------------------------------------------------
+  function handleManualAdd(e) {
+    if (e) e.preventDefault();
+    const codeInput = document.getElementById("bc-bridge-manual-code");
+    const qtyInput = document.getElementById("bc-bridge-manual-qty");
+    if (!codeInput) return;
+
+    const rawCode = codeInput.value.trim();
+    if (!rawCode) {
+      codeInput.focus();
+      return;
+    }
+
+    // Support pasted multi-line text or separated items
+    const lines = rawCode.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      let countAdded = 0;
+      for (const line of lines) {
+        const parts = line.split(/[\t;]+|\s{2,}/).map((p) => p.trim()).filter(Boolean);
+        let c = "";
+        let q = null;
+        if (parts.length >= 2) {
+          const possibleQ = parseFloat(parts[parts.length - 1].replace(",", "."));
+          if (!isNaN(possibleQ) && possibleQ > 0) {
+            q = possibleQ;
+            c = cleanArticleCode(parts.slice(0, -1).join(" ")).toUpperCase();
+          } else {
+            c = cleanArticleCode(line).toUpperCase();
+          }
+        } else {
+          c = cleanArticleCode(line).toUpperCase();
+        }
+        if (c) {
+          addItemToBuffer(c, "Manuāls ieraksts", q);
+          countAdded++;
+        }
+      }
+      showToast(`Pievienoti ${countAdded} artikuli buferim!`, "success");
+      codeInput.value = "";
+      if (qtyInput) qtyInput.value = "1";
+      codeInput.focus();
+      return;
+    }
+
+    // Single item
+    const cleanedCode = cleanArticleCode(rawCode).toUpperCase();
+    if (!cleanedCode) {
+      showToast("Lūdzu, ievadiet derīgu artikula kodu!", "warn");
+      codeInput.focus();
+      return;
+    }
+
+    let parsedQty = null;
+    if (qtyInput && qtyInput.value.trim()) {
+      const qVal = parseFloat(qtyInput.value.trim().replace(",", "."));
+      if (!isNaN(qVal) && qVal > 0) {
+        parsedQty = qVal;
+      }
+    }
+
+    addItemToBuffer(cleanedCode, "Manuāls ieraksts", parsedQty);
+
+    codeInput.value = "";
+    if (qtyInput) qtyInput.value = "1";
+    codeInput.focus();
+  }
+
+  // --------------------------------------------------------------------------
   // Slide-out Drawer Panel
   // --------------------------------------------------------------------------
   function injectDrawer() {
@@ -752,9 +829,46 @@
             <span id="bc-bridge-total-stat">0 artikuli</span>
           </div>
 
-          <!-- Instructions hint banner -->
-          <div style="font-size: 11px; color: #475569; background: #fff8f5; border: 1px solid #ffd0b8; border-radius: 6px; padding: 7px 10px; margin-bottom: 8px; line-height: 1.4;">
-            💡 <b>Kā ielīmēt BC:</b> Noklikšķiniet uz tukšās rindas kolonnā <b>Tips</b> (1. kolonna) un spiediet <b>Ctrl + V</b>.
+          <!-- Manuāla artikula pievienošana -->
+          <div class="bc-bridge-manual-box">
+            <div class="bc-bridge-manual-label">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+              </svg>
+              <span>Manuāla pievienošana (no galvas):</span>
+            </div>
+            <form id="bc-bridge-manual-form" class="bc-bridge-manual-form" autocomplete="off">
+              <div class="bc-bridge-manual-row">
+                <input 
+                  type="text" 
+                  id="bc-bridge-manual-code" 
+                  class="bc-bridge-manual-input-code" 
+                  placeholder="Artikuls (piem., 70T3550)" 
+                  autocomplete="off" 
+                  spellcheck="false" 
+                />
+                <input 
+                  type="text" 
+                  inputmode="decimal" 
+                  id="bc-bridge-manual-qty" 
+                  class="bc-bridge-manual-input-qty" 
+                  placeholder="Skaits" 
+                  value="1" 
+                  title="Daudzums (solis/gab)" 
+                />
+                <button 
+                  type="submit" 
+                  id="bc-bridge-manual-btn-add" 
+                  class="bc-bridge-manual-btn" 
+                  title="Pievienot artikulu buferim (Enter)"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                  <span>Pievienot</span>
+                </button>
+              </div>
+            </form>
           </div>
 
           <!-- Primary: Copy for BC -->
@@ -798,6 +912,7 @@
     // Event Listeners
     document.getElementById("bc-bridge-overlay").addEventListener("click", () => toggleDrawer(false));
     document.getElementById("bc-bridge-btn-close").addEventListener("click", () => toggleDrawer(false));
+    document.getElementById("bc-bridge-manual-form").addEventListener("submit", handleManualAdd);
     document.getElementById("bc-bridge-btn-copy").addEventListener("click", copyRowsToClipboard);
     document.getElementById("bc-bridge-btn-switch-tab").addEventListener("click", handleSwitchToBCTab);
     document.getElementById("bc-bridge-btn-export-csv").addEventListener("click", exportToCSV);

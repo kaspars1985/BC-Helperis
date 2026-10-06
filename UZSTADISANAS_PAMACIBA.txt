@@ -41,6 +41,8 @@ LIETOŠANA IKDIENĀ:
      paņems pareizo artikula numuru.
    - Var arī iezīmēt jebkuru tekstu un spiest peles labo taustiņu 
      -> "Pievienot BC helperim".
+   - Ja artikuls zināms no galvas, ievadiet kodu un skaitu tieši panelī
+     un spiediet Enter vai "Pievienot".
 
 2. Apakšējā labajā stūrī atveriet oranžo paneli:
    - Šeit var rediģēt daudzumus (atbalsta arī decimāldaļas, piem., 0,5 vai 2,5);

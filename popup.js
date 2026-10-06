@@ -174,6 +174,52 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
+  const formManual = document.getElementById("form-manual");
+  const manualCode = document.getElementById("manual-code");
+  const manualQty = document.getElementById("manual-qty");
+
+  formManual?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const rawCode = (manualCode.value || "").trim();
+    if (!rawCode) {
+      manualCode.focus();
+      return;
+    }
+
+    const cleaned = rawCode.replace(/^(artikuls|kods|sku)[:\s]*/i, "").trim().toUpperCase();
+    if (!cleaned) {
+      manualCode.focus();
+      return;
+    }
+
+    const qVal = parseFloat((manualQty.value || "1").trim().replace(",", "."));
+    const qty = (!isNaN(qVal) && qVal > 0) ? qVal : 1;
+
+    const existingIndex = buffer.findIndex((i) => i.code.toLowerCase() === cleaned.toLowerCase());
+    if (existingIndex >= 0) {
+      const prevQty = parseFloat(buffer[existingIndex].qty) || 0;
+      buffer[existingIndex].qty = Math.round((prevQty + qty) * 100) / 100;
+    } else {
+      buffer.push({
+        id: "item_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+        code: cleaned,
+        name: "Manuāls ieraksts",
+        qty: qty,
+        step: 1,
+        unit: "gab.",
+        price: "",
+        addedAt: new Date().toISOString()
+      });
+    }
+
+    await chrome.storage.local.set({ bc_buffer: buffer });
+    showToast(`Pievienots: ${cleaned} (${qty} gab.)`);
+    manualCode.value = "";
+    manualQty.value = "1";
+    manualCode.focus();
+    render();
+  });
+
   btnClear.addEventListener("click", async () => {
     if (!buffer.length) return;
     if (confirm("Notīrīt visus saglabātos artikulus?")) {

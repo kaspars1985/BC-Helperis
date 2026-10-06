@@ -167,6 +167,73 @@
       text-decoration: underline;
       color: #cc4400;
     }
+    .manual-box {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .manual-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      letter-spacing: 0.2px;
+    }
+    .manual-form {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    .input-code {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 28px;
+      padding: 0 7px;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      outline: none;
+    }
+    .input-code:focus {
+      border-color: #ff5501;
+      box-shadow: 0 0 0 2px rgba(255, 85, 1, 0.15);
+    }
+    .input-qty {
+      width: 48px;
+      height: 28px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      outline: none;
+    }
+    .input-qty:focus {
+      border-color: #ff5501;
+      box-shadow: 0 0 0 2px rgba(255, 85, 1, 0.15);
+    }
+    .btn-manual {
+      height: 28px;
+      padding: 0 8px;
+      background: #ff5501;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-manual:hover {
+      background: #e64c00;
+    }
   </style>
 </head>
 <body>
@@ -188,6 +255,33 @@
     </div>
 
     <div id="toast" class="toast"></div>
+
+    <div class="manual-box">
+      <div class="manual-label">Manuāla artikula pievienošana:</div>
+      <form id="form-manual" class="manual-form" autocomplete="off">
+        <input 
+          type="text" 
+          id="manual-code" 
+          class="input-code" 
+          placeholder="Artikuls (piem. 70T3550)" 
+          autocomplete="off" 
+          spellcheck="false" 
+          required 
+        />
+        <input 
+          type="text" 
+          inputmode="decimal" 
+          id="manual-qty" 
+          class="input-qty" 
+          placeholder="Skaits" 
+          value="1" 
+          title="Daudzums" 
+        />
+        <button type="submit" id="btn-manual-add" class="btn-manual" title="Pievienot buferim (Enter)">
+          + Pievienot
+        </button>
+      </form>
+    </div>
 
     <button id="btn-copy" class="btn btn-primary">
       <span>Kopēt priekš BC (Ctrl+V)</span>
@@ -211,7 +305,7 @@
     <span>Ziņot par kļūdām vai ieteikt:</span>
     <a href="mailto:kasparsciematnieks@amf.lv?subject=BC%20helperis%20atsauksme" class="feedback-link">kasparsciematnieks@amf.lv</a>
     <span style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
-      v1.2.5 · <a href="https://github.com/kaspars1985/BC-Helperis" target="_blank" style="color: #94a3b8; text-decoration: underline;">GitHub</a>
+      v1.3.0 · <a href="https://github.com/kaspars1985/BC-Helperis" target="_blank" style="color: #94a3b8; text-decoration: underline;">GitHub</a>
     </span>
   </div>
 
