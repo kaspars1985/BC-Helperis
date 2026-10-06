@@ -30,6 +30,12 @@ jobs:
             README.md \
             -x "*.DS_Store" "*Thumbs.db*"
 
+      - name: Extract Commit Message
+        id: msg
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          echo "commit_msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -38,7 +44,7 @@ jobs:
           body: |
             ### 🚀 BC helperis ${{ github.ref_name }}
 
-            Oficiālā pārlūka paplašinājuma pakotne AM Furnitūra darbiniekiem.
+            ✨ **Jaunumi:** ${{ steps.msg.outputs.commit_msg }}
 
             #### 📦 Uzstādīšanas soļi:
             1. Lejupielādējiet **BC-helperis.zip** zemāk.

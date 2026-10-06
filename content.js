@@ -1470,11 +1470,21 @@
       // Determine changelog notes for latest version
       let notes = VERSION_CHANGELOG[cleanLatest] || "";
       if (!notes && release.body) {
-        const lines = release.body
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => l && !l.startsWith("#") && !l.startsWith("Oficiālā") && !l.startsWith("1.") && !l.startsWith("2.") && !l.startsWith("3."));
-        if (lines.length > 0) notes = lines[0].replace(/^[-*]\s*/, "");
+        const match = release.body.match(/(?:Jaunumi|Uzlabojumi)[:\s*]+([^\r\n#]+)/i);
+        if (match) {
+          notes = match[1].replace(/[*_`]/g, "").trim();
+        } else {
+          const lines = release.body
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => {
+              if (!l || l.startsWith("#")) return false;
+              if (/^(Oficiālā|Lejupielādējiet|Ar labo|Atveriet|Ieslēdziet|Spiediet|[0-9]+[\.\)])/i.test(l)) return false;
+              if (/^[-*]\s*(Edge|Chrome|Safari|Firefox)/i.test(l)) return false;
+              return true;
+            });
+          if (lines.length > 0) notes = lines[0].replace(/^[-*]\s*/, "").replace(/[*_`]/g, "").trim();
+        }
       }
 
       const downloadAsset = (release.assets || []).find((a) => a.name && a.name.endsWith(".zip"));
