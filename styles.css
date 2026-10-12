@@ -117,6 +117,112 @@
   border-color: #107c41 !important;
 }
 
+/* --------------------------------------------------------------------------
+   1b. Segmented "+ BC" Button Group for step 0.25 (3-split) & 0.5 (2-split)
+       Slanted (/) dividers with 2px transparent gap
+   -------------------------------------------------------------------------- */
+.bc-bridge-btn-group {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border-radius: 4px !important;
+  box-shadow: 0 2px 6px rgba(255, 85, 1, 0.28) !important;
+  margin: 6px 0 0 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  gap: 2px !important;
+  z-index: 5 !important;
+  transition: all 0.2s ease !important;
+}
+
+.bc-bridge-btn-group:hover {
+  box-shadow: 0 4px 12px rgba(255, 85, 1, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+.bc-bridge-btn-segment {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 10px 4px !important;
+  background: linear-gradient(135deg, #ff5501, #e64c00) !important;
+  color: #ffffff !important;
+  font-family: var(--bc-font) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.2px !important;
+  border: none !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  outline: none !important;
+  user-select: none !important;
+  transform: skewX(-14deg) !important;
+  transition: background 0.15s ease, filter 0.15s ease, transform 0.08s ease !important;
+  white-space: nowrap !important;
+}
+
+/* Compensate outer ends so container corners remain perfectly solid */
+.bc-bridge-btn-segment:first-child {
+  margin-left: -10px !important;
+  padding-left: 12px !important;
+}
+
+.bc-bridge-btn-segment:last-child {
+  margin-right: -10px !important;
+  padding-right: 12px !important;
+}
+
+/* Counter-skew inner content so text and icons remain upright and sharp */
+.bc-bridge-btn-segment span,
+.bc-bridge-btn-segment svg {
+  transform: skewX(14deg) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.bc-bridge-btn-segment:hover {
+  background: linear-gradient(135deg, #ff661a, #cc4400) !important;
+  filter: brightness(1.08) !important;
+}
+
+.bc-bridge-btn-segment:active {
+  filter: brightness(0.92) !important;
+}
+
+.bc-bridge-btn-segment svg {
+  width: 14px !important;
+  height: 14px !important;
+  fill: currentColor !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.15s ease !important;
+}
+
+.bc-bridge-btn-segment:hover svg {
+  transform: skewX(14deg) scale(1.1) !important;
+}
+
+.bc-bridge-btn-segment.bc-bridge-segment-added {
+  background: linear-gradient(135deg, #107c41, #0b5a2f) !important;
+  color: #ffffff !important;
+  animation: bcSegmentPulse 0.25s ease !important;
+}
+
+@keyframes bcSegmentPulse {
+  0% { transform: skewX(-14deg) scale(0.96); }
+  50% { transform: skewX(-14deg) scale(1.02); }
+  100% { transform: skewX(-14deg) scale(1); }
+}
+
 /* Search Autocomplete Compact Buttons */
 .bc-bridge-btn-add.bc-bridge-search-btn {
   display: inline-flex !important;

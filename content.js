@@ -11,9 +11,12 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.3.1";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.3.4";
 
   const VERSION_CHANGELOG = {
+    "1.3.4": "Pievienots 0,25 solis MDF, HDF, finierētam MDF (87.77) un finierētām kokskaidu plātnēm (87.73), kā arī 0,5 solis Shinnoki plātnēm (87.S1).",
+    "1.3.3": "Slīpi dalījumi (/) ar 2px atstarpi plātņu precēm un Enter taustiņa pārtveršana daudzuma laukos, lai prece tiktu pievienota BC helperim, nevis veikala grozam.",
+    "1.3.2": "Eleganta sadalītā +BC poga plātņu precēm: LKSP precēm ar soli 0,25 (+0,25 | +0,5 | +1) un galda virsmām/sienas paneļiem ar soli 0,5 (+0,5 | +1).",
     "1.3.1": "Iespēja manuāli ievadīt artikulus un daudzumus tieši paplašinājumā (artikuliem no galvas), noņemts liekais pamācības logs un uzlaboti relīžu apraksti.",
     "1.3.0": "Iespēja manuāli ievadīt artikulus un daudzumus tieši paplašinājumā (artikuliem no galvas), noņemts liekais pamācības logs.",
     "1.2.5": "Pievienots standarta Business Central pilnā izkārtojuma atbalsts (Tips -> [PVN] -> Nr. -> [Vienības] -> [Apraksts] -> Daudzums) un uzlabota pielāgoto veidņu darbība.",
@@ -47,6 +50,7 @@
     injectSettingsModal();
     scanAndInjectButtons();
     setupSearchInputListener();
+    setupQtyEnterOverride();
     setupMutationObserver();
     setupMessageListener();
     checkForUpdates();
@@ -118,7 +122,7 @@
 
     cardsToProcess.forEach((card) => {
       // DEDUPLICATION: Remove any duplicate buttons if previously injected
-      const existingBtns = card.querySelectorAll(".bc-bridge-btn-add");
+      const existingBtns = card.querySelectorAll(".bc-bridge-btn-add, .bc-bridge-btn-group");
       if (existingBtns.length > 1) {
         for (let i = 1; i < existingBtns.length; i++) existingBtns[i].remove();
         return;
@@ -132,7 +136,7 @@
           ".actions-primary, .product-item-actions, form[data-role='tocart-form'], .product-item-inner .actions-primary"
         ) || card;
 
-        if (actionsContainer.querySelector(".bc-bridge-btn-add")) return;
+        if (actionsContainer.querySelector(".bc-bridge-btn-add, .bc-bridge-btn-group")) return;
 
         const btn = createAddButton(productData, card, false);
         actionsContainer.appendChild(btn);
@@ -142,7 +146,7 @@
     // 2. Scan Single Product View (PDP)
     const pdpMain = document.querySelector(".product-info-main, .product-view");
     if (pdpMain) {
-      const existingPdpBtns = pdpMain.querySelectorAll(".bc-bridge-btn-add");
+      const existingPdpBtns = pdpMain.querySelectorAll(".bc-bridge-btn-add, .bc-bridge-btn-group");
       if (existingPdpBtns.length > 1) {
         for (let i = 1; i < existingPdpBtns.length; i++) existingPdpBtns[i].remove();
         return;
@@ -155,7 +159,7 @@
           ".box-tocart .actions, .box-tocart, .product-add-form"
         ) || pdpMain;
 
-        if (!targetContainer.querySelector(".bc-bridge-btn-add")) {
+        if (!targetContainer.querySelector(".bc-bridge-btn-add, .bc-bridge-btn-group")) {
           const btn = createAddButton(pdpData, pdpMain, true);
           targetContainer.appendChild(btn);
         }
@@ -188,12 +192,25 @@
     if (isAbs23mm) {
       step = 5;
       unit = "m";
-    } else if (/^76\./i.test(cleanCode) || /^79\./i.test(cleanCode)) {
-      // Worktops / Wall panels (half-sheet standard)
+    } else if (
+      /^76\./i.test(cleanCode) ||
+      /^79\./i.test(cleanCode) ||
+      /^87\.S1/i.test(cleanCode) ||
+      /\b(?:galda\s*virsm|sienas\s*panel)/i.test(cleanName)
+    ) {
+      // Worktops / Wall panels (half-sheet standard) & Shinnoki plātnes (87.S1)
       step = 0.5;
       unit = "gab.";
-    } else if (/^73\./i.test(cleanCode)) {
-      // Laminates (quarter-sheet standard)
+    } else if (
+      /^73\./i.test(cleanCode) ||
+      /^77\./i.test(cleanCode) ||
+      /^87\.73/i.test(cleanCode) ||
+      /^87\.77/i.test(cleanCode) ||
+      /^(?:0[-.]?hdf)/i.test(cleanCode) ||
+      /\b(?:lksp|mdf|hdf)\b/i.test(cleanName) ||
+      /\bfinier[ēe]t[a-z]*\s+(?:mdf|kokskaid)/i.test(cleanName)
+    ) {
+      // Laminates / LKSP (73.), MDF (77.), HDF, Finierēta kokskaidu plātne (87.73), Finierēts MDF (87.77) (quarter-sheet standard)
       step = 0.25;
       unit = "gab.";
     }
@@ -461,6 +478,12 @@
 
   function createAddButton(productData, parentContainer, isPDP = false) {
     const detected = getProductQuantityAndStep(productData.code, productData.name, parentContainer, isPDP);
+
+    // Precēm ar soli 0,25 (LKSP u.c.) un 0,5 (Galda virsmām, sienas paneļiem) veidojam sadalīto kartīti
+    if (detected.step === 0.25 || detected.step === 0.5) {
+      return createSegmentedButton(productData, parentContainer, detected, isPDP);
+    }
+
     const initialText = (!isPDP && detected.step > 1) ? `+ ${detected.step}${detected.unit} BC` : `+ BC`;
 
     const btn = document.createElement("button");
@@ -507,6 +530,67 @@
     return btn;
   }
 
+  function createSegmentedButton(productData, parentContainer, detected, isPDP = false) {
+    const isThreeWay = detected.step === 0.25;
+    const segmentsConfig = isThreeWay
+      ? [
+          { qty: 0.25, label: "+0,25", hasIcon: false, titleQty: "0,25" },
+          { qty: 0.5, label: "+0,5", hasIcon: true, titleQty: "0,5" },
+          { qty: 1, label: "+1", hasIcon: false, titleQty: "1" }
+        ]
+      : [
+          { qty: 0.5, label: "+0,5", hasIcon: true, titleQty: "0,5" },
+          { qty: 1, label: "+1", hasIcon: false, titleQty: "1" }
+        ];
+
+    const group = document.createElement("div");
+    group.className = `bc-bridge-btn-group bc-bridge-btn-group-${segmentsConfig.length}`;
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-label", "Pievienot Business Central buferim");
+
+    segmentsConfig.forEach((cfg) => {
+      const segBtn = document.createElement("button");
+      segBtn.type = "button";
+      segBtn.className = "bc-bridge-btn-segment" + (cfg.hasIcon ? " bc-bridge-segment-primary" : "");
+      segBtn.setAttribute("data-qty", String(cfg.qty));
+      segBtn.title = `Pievienot +${cfg.titleQty} ${detected.unit} (${productData.code}) Business Central buferim`;
+
+      const iconHtml = cfg.hasIcon
+        ? `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`
+        : "";
+
+      segBtn.innerHTML = `${iconHtml}<span>${cfg.label}</span>`;
+
+      segBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentData = isPDP ? extractProductFromPDP(parentContainer) : extractProductFromCard(parentContainer);
+        const codeToUse = (currentData && currentData.code) ? currentData.code : productData.code;
+        const nameToUse = (currentData && currentData.name) ? currentData.name : productData.name;
+        const priceToUse = (currentData && currentData.price) ? currentData.price : productData.price;
+
+        addItemToBuffer(codeToUse, nameToUse, cfg.qty, priceToUse, detected.step, detected.unit);
+
+        // Visual feedback on this specific segment
+        const originalHtml = segBtn.innerHTML;
+        segBtn.classList.add("bc-bridge-segment-added");
+        segBtn.innerHTML = `<span>✓ ${cfg.label}</span>`;
+
+        if (segBtn.__resetTimeout) clearTimeout(segBtn.__resetTimeout);
+        segBtn.__resetTimeout = setTimeout(() => {
+          segBtn.classList.remove("bc-bridge-segment-added");
+          segBtn.innerHTML = originalHtml;
+          segBtn.__resetTimeout = null;
+        }, 850);
+      });
+
+      group.appendChild(segBtn);
+    });
+
+    return group;
+  }
+
   function setupSearchInputListener() {
     const bindSearch = () => {
       const inputs = document.querySelectorAll("#search, input[name='q'], .search-autocomplete input, .minisearch input");
@@ -523,6 +607,137 @@
     };
     bindSearch();
     setTimeout(bindSearch, 1500);
+  }
+
+  // --------------------------------------------------------------------------
+  // Enter Key Override on Quantity Inputs -> Add to BC Helper
+  // --------------------------------------------------------------------------
+  function setupQtyEnterOverride() {
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "Enter") return;
+
+        const target = e.target;
+        if (!target) return;
+
+        // Check if target is a product quantity input on eamf.lv
+        const isQtyInput =
+          target.matches &&
+          target.matches(
+            'input.qty, input[name="qty"], #qty, [name="qty"], #configurable-qty-selector, input[data-role="qty"]'
+          );
+
+        if (!isQtyInput) return;
+
+        // Strictly prevent adding to the eamf.lv native webshop cart
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+        // Find enclosing card or PDP container
+        const isPDP = !!target.closest(".product-info-main, .product-view");
+        const container = isPDP
+          ? target.closest(".product-info-main, .product-view")
+          : (target.closest("li.product-item, .product-item, .product-item-info, .item") || target.closest("form") || target.parentElement);
+
+        const productData = isPDP
+          ? extractProductFromPDP(container || document)
+          : extractProductFromCard(container || document);
+
+        if (!productData || !productData.code) {
+          console.warn("[BC Bridge] Neizdevās nolasīt artikulu pie Enter taustiņa");
+          return;
+        }
+
+        // Get entered quantity from the input field
+        const rawVal = (target.value || "").trim().replace(",", ".");
+        const parsedVal = parseFloat(rawVal);
+
+        // Detect step & unit
+        const detected = getProductQuantityAndStep(
+          productData.code,
+          productData.name,
+          container,
+          isPDP
+        );
+
+        const qtyToAdd = (!isNaN(parsedVal) && parsedVal > 0) ? parsedVal : detected.qty;
+
+        // Add to BC Helper buffer
+        addItemToBuffer(
+          productData.code,
+          productData.name,
+          qtyToAdd,
+          productData.price,
+          detected.step,
+          detected.unit
+        );
+
+        // Visual feedback on card button / segmented button
+        triggerButtonFeedback(container, qtyToAdd, detected.unit);
+      },
+      true // capture phase: capture event BEFORE Magento/eamf form submit handlers
+    );
+
+    // Backup prevent: catch native form submit if initiated from quantity input
+    document.addEventListener(
+      "submit",
+      (e) => {
+        const active = document.activeElement;
+        if (
+          active &&
+          active.matches &&
+          active.matches('input.qty, input[name="qty"], #qty, [name="qty"], #configurable-qty-selector, input[data-role="qty"]')
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        }
+      },
+      true
+    );
+  }
+
+  function triggerButtonFeedback(container, qty, unit) {
+    if (!container) return;
+
+    // 1. If segmented button group
+    const group = container.querySelector(".bc-bridge-btn-group");
+    if (group) {
+      const matchingSeg = group.querySelector(`.bc-bridge-btn-segment[data-qty="${qty}"]`);
+      if (matchingSeg) {
+        const originalHtml = matchingSeg.innerHTML;
+        matchingSeg.classList.add("bc-bridge-segment-added");
+        matchingSeg.innerHTML = `<span>✓ +${qty}</span>`;
+        if (matchingSeg.__resetTimeout) clearTimeout(matchingSeg.__resetTimeout);
+        matchingSeg.__resetTimeout = setTimeout(() => {
+          matchingSeg.classList.remove("bc-bridge-segment-added");
+          matchingSeg.innerHTML = originalHtml;
+          matchingSeg.__resetTimeout = null;
+        }, 900);
+      } else {
+        const segments = group.querySelectorAll(".bc-bridge-btn-segment");
+        segments.forEach((seg) => seg.classList.add("bc-bridge-segment-added"));
+        setTimeout(() => {
+          segments.forEach((seg) => seg.classList.remove("bc-bridge-segment-added"));
+        }, 800);
+      }
+      return;
+    }
+
+    // 2. If single "+ BC" button
+    const singleBtn = container.querySelector(".bc-bridge-btn-add");
+    if (singleBtn) {
+      singleBtn.classList.add("bc-bridge-btn-added-animate");
+      const span = singleBtn.querySelector("span");
+      const originalText = span ? span.innerText : "";
+      if (span) span.innerText = `✓ Pievienots (${qty} ${unit})!`;
+      setTimeout(() => {
+        singleBtn.classList.remove("bc-bridge-btn-added-animate");
+        if (span) span.innerText = originalText;
+      }, 1000);
+    }
   }
 
   function setupMutationObserver() {
@@ -557,7 +772,7 @@
       state.buffer[existingIndex].qty = Math.round((prevQty + finalQty) * 100) / 100;
       if (name && !state.buffer[existingIndex].name) state.buffer[existingIndex].name = name;
       if (price && !state.buffer[existingIndex].price) state.buffer[existingIndex].price = price;
-      if (finalStep > 1 && (!state.buffer[existingIndex].step || state.buffer[existingIndex].step === 1)) {
+      if (finalStep && finalStep !== 1 && (!state.buffer[existingIndex].step || state.buffer[existingIndex].step === 1)) {
         state.buffer[existingIndex].step = finalStep;
         state.buffer[existingIndex].unit = finalUnit;
       }
