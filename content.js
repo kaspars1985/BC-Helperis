@@ -11,9 +11,10 @@
   // Application Constants & State
   // --------------------------------------------------------------------------
   const GITHUB_REPO = "kaspars1985/BC-Helperis";
-  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.3.4";
+  const CURRENT_VERSION = (chrome.runtime && chrome.runtime.getManifest) ? chrome.runtime.getManifest().version : "1.4.0";
 
   const VERSION_CHANGELOG = {
+    "1.4.0": "100% uzticama soļu noteikšana tieši no eamf.lv kartītes elementiem (.qty-tooltip-step-value un lauka vērtība); automātisks 2-daļu un 3-daļu slīpais pogu izkārtojums akriliem, LKSP, MDF un visām kataloga precēm.",
     "1.3.4": "Pievienots 0,25 solis MDF, HDF, finierētam MDF (87.77) un finierētām kokskaidu plātnēm (87.73), kā arī 0,5 solis Shinnoki plātnēm (87.S1).",
     "1.3.3": "Slīpi dalījumi (/) ar 2px atstarpi plātņu precēm un Enter taustiņa pārtveršana daudzuma laukos, lai prece tiktu pievienota BC helperim, nevis veikala grozam.",
     "1.3.2": "Eleganta sadalītā +BC poga plātņu precēm: LKSP precēm ar soli 0,25 (+0,25 | +0,5 | +1) un galda virsmām/sienas paneļiem ar soli 0,5 (+0,5 | +1).",
@@ -171,7 +172,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Step & Quantity Detection Rules (AM Furnitūra Catalog Standards)
+  // Step & Quantity Detection Rules (AM Furnitūra Catalog Standards & DOM-First)
   // --------------------------------------------------------------------------
   function getProductQuantityAndStep(code, name, container = null, isPDP = false) {
     let step = 1;
@@ -180,93 +181,129 @@
     const cleanCode = (code || "").trim();
     const cleanName = (name || "").trim();
 
-    // 1. Detect step & unit from Code / Name rules (AM Furnitūra catalog standards)
-    // ABS 23mm edges: e.g. 74.F187.08.23, 74.F187.2.23, 74P.32339.08.23, 74.W1000.PM.1.23, 94.M032.HG.1.23
-    // Standard 23mm edging coils in AMF are sold in increments of 5 meters!
+    // Check if item is ABS 23mm edging (sold in 5 meter increments)
     const isAbs23mm =
       /(?:\.08\.23|\.0,8\.23|\.0\.8\.23|\.2\.23|\.1\.23|\.1\.5\.23|\.1,5\.23)$/i.test(cleanCode) ||
       /(?:74|74P|94)\..*?\.(?:08|0\.8|0,8|1|1\.5|1,5|2)\.23$/i.test(cleanCode) ||
       (cleanCode.endsWith(".23") && /^(?:74|74P|94)\./i.test(cleanCode)) ||
       (/\bABS\b/i.test(cleanName) && /(?:0[,\.]8|1|1[,\.]5|2)[\s\/\*x]+23\s*mm/i.test(cleanName));
 
-    if (isAbs23mm) {
-      step = 5;
-      unit = "m";
-    } else if (
-      /^76\./i.test(cleanCode) ||
-      /^79\./i.test(cleanCode) ||
-      /^87\.S1/i.test(cleanCode) ||
-      /\b(?:galda\s*virsm|sienas\s*panel)/i.test(cleanName)
-    ) {
-      // Worktops / Wall panels (half-sheet standard) & Shinnoki plātnes (87.S1)
-      step = 0.5;
-      unit = "gab.";
-    } else if (
-      /^73\./i.test(cleanCode) ||
-      /^77\./i.test(cleanCode) ||
-      /^87\.73/i.test(cleanCode) ||
-      /^87\.77/i.test(cleanCode) ||
-      /^(?:0[-.]?hdf)/i.test(cleanCode) ||
-      /\b(?:lksp|mdf|hdf)\b/i.test(cleanName) ||
-      /\bfinier[ēe]t[a-z]*\s+(?:mdf|kokskaid)/i.test(cleanName)
-    ) {
-      // Laminates / LKSP (73.), MDF (77.), HDF, Finierēta kokskaidu plātne (87.73), Finierēts MDF (87.77) (quarter-sheet standard)
-      step = 0.25;
-      unit = "gab.";
-    }
+    let detectedFromDOM = false;
 
-    // 2. If container has explicit HTML inputs or tooltips, prioritize DOM data
+    // 1. PRIMARY: If DOM container is present (PLP card or PDP), extract exact step from eamf.lv elements
     if (container) {
-      // Check #qty-tooltip (e.g. "Šo produktu ir iespējams iegādāties ar soli 5")
-      const tooltip = container.querySelector("#qty-tooltip, .qty-tooltip-step-value, [class*='qty-tooltip']");
-      if (tooltip) {
-        const text = tooltip.innerText || "";
-        const match = text.match(/soli\s*([0-9]+(?:[\.,][0-9]+)?)/i) || text.match(/(\d+(?:[\.,]\d+)?)/);
-        if (match) {
-          const parsed = parseFloat(match[1].replace(",", "."));
-          if (!isNaN(parsed) && parsed > 0) {
-            step = parsed;
+      // A. Direct step value element on eamf.lv: <p class="qty-tooltip-step-value configurable">0.25</p>
+      const stepValEl = container.querySelector(
+        ".qty-tooltip-step-value, [class*='qty-tooltip-step-value']"
+      );
+      if (stepValEl && stepValEl.innerText) {
+        const val = parseFloat(stepValEl.innerText.replace(",", ".").trim());
+        if (!isNaN(val) && val > 0) {
+          step = val;
+          detectedFromDOM = true;
+        }
+      }
+
+      // B. Tooltip container: <div id="qty-tooltip-..." class="product pricing tooltip">
+      if (!detectedFromDOM) {
+        const tooltipEl = container.querySelector(
+          "#qty-tooltip, [id^='qty-tooltip'], .product.pricing.tooltip, [class*='qty-tooltip']"
+        );
+        if (tooltipEl && tooltipEl.innerText) {
+          const match = tooltipEl.innerText.match(/soli\s*([0-9]+(?:[\.,][0-9]+)?)/i);
+          if (match) {
+            const val = parseFloat(match[1].replace(",", "."));
+            if (!isNaN(val) && val > 0) {
+              step = val;
+              detectedFromDOM = true;
+            }
           }
         }
       }
 
-      // Check input elements for data-validate, step attribute, and current value
+      // C. Quantity input default/initial value and attributes
       const qtyInput = container.querySelector(
         'input.qty, input[name="qty"], #qty, [name="qty"], #configurable-qty-selector'
       );
       if (qtyInput) {
+        // Attribute step (if numeric and not 'any')
+        const inputStepAttr = parseFloat(qtyInput.getAttribute("step"));
+        if (!isNaN(inputStepAttr) && inputStepAttr > 0) {
+          step = inputStepAttr;
+          detectedFromDOM = true;
+        }
+
+        // data-validate qtyIncrements
         const valAttr = qtyInput.getAttribute("data-validate");
         if (valAttr) {
           try {
             const valObj = JSON.parse(valAttr);
             if (valObj && valObj["validate-item-quantity"]) {
               const inc = parseFloat(valObj["validate-item-quantity"].qtyIncrements);
-              if (!isNaN(inc) && inc > 0) step = inc;
+              if (!isNaN(inc) && inc > 0) {
+                step = inc;
+                detectedFromDOM = true;
+              }
             }
           } catch (e) {
             const m = valAttr.match(/qtyIncrements["']?\s*:\s*([0-9\.]+)/);
             if (m) {
               const inc = parseFloat(m[1]);
-              if (!isNaN(inc) && inc > 0) step = inc;
+              if (!isNaN(inc) && inc > 0) {
+                step = inc;
+                detectedFromDOM = true;
+              }
             }
           }
         }
 
-        const inputStep = parseFloat(qtyInput.getAttribute("step"));
-        if (!isNaN(inputStep) && inputStep > 0 && inputStep !== 1) {
-          step = inputStep;
+        // Initial HTML value on eamf.lv (e.g. value="0.25" for LKSP/MDF, value="0.5" for Akrils/virsmas, value="1")
+        if (!detectedFromDOM) {
+          const initValAttr = qtyInput.getAttribute("value") || qtyInput.defaultValue;
+          if (initValAttr) {
+            const parsedInit = parseFloat(String(initValAttr).replace(",", "."));
+            if (!isNaN(parsedInit) && parsedInit > 0) {
+              step = parsedInit;
+              detectedFromDOM = true;
+            }
+          }
         }
 
-        if (qtyInput.value) {
-          const parsedVal = parseFloat(qtyInput.value.replace(",", "."));
-          if (!isNaN(parsedVal) && parsedVal > 0) {
-            return { qty: parsedVal, step, unit };
+        // Current value of the input field
+        const currentVal = parseFloat(String(qtyInput.value || "").replace(",", "."));
+        if (!isNaN(currentVal) && currentVal > 0) {
+          // If we haven't established step yet, but input currently holds 0.25 or 0.5:
+          if (!detectedFromDOM && (currentVal === 0.25 || currentVal === 0.5)) {
+            step = currentVal;
           }
+          unit = (step === 5 || isAbs23mm) ? "m" : "gab.";
+          return { qty: currentVal, step, unit };
         }
       }
     }
 
-    // Default quantity when no input exists on card: equals the step (e.g. 5 for ABS 23mm, 1 for regular)
+    // 2. FALLBACK: When container is null (e.g. search autocomplete dropdown or context menu)
+    if (!detectedFromDOM) {
+      if (isAbs23mm) {
+        step = 5;
+        unit = "m";
+      } else if (
+        /^76\./i.test(cleanCode) ||
+        /^79\./i.test(cleanCode) ||
+        /\b(?:galda\s*virsm|sienas\s*panel)/i.test(cleanName)
+      ) {
+        step = 0.5;
+        unit = "gab.";
+      } else if (
+        /^73\./i.test(cleanCode) ||
+        /\blksp\b/i.test(cleanName)
+      ) {
+        step = 0.25;
+        unit = "gab.";
+      }
+    }
+
+    unit = (step === 5 || isAbs23mm) ? "m" : "gab.";
     return { qty: step, step, unit };
   }
 
